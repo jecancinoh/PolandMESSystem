@@ -1,0 +1,1 @@
+import{b as o}from"./index.e737e5e9.js";import{H as t}from"./highcharts-vue.min.20ddf3fd.js";import"./_commonjsHelpers.468b0bfa.js";import"./highcharts.bfb87e3f.js";var h=o(({app:r})=>{r.use(t)});export{h as default};

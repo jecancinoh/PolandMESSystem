@@ -1,0 +1,1 @@
+import{b as o,bP as l,bQ as s}from"./index.e737e5e9.js";import{i as e,q as n,a as r}from"./index.d7d4310b.js";const m={en:s,es:n,pl:r};var b=o(({app:t})=>{const a=localStorage.getItem("lang")||"es";e.global.locale.value=a,document.documentElement.setAttribute("lang",a),l.lang.set(m[a]||s),t.use(e)});export{b as default};
