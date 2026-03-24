@@ -252,7 +252,7 @@
                 <template v-else-if="col.name === 'StartTime'">
                   <span
                     :class="{
-                      'text-negative': !dayjs
+                      'text-negative text-bold': !dayjs
                         .utc(props.row.StartTime)
                         .local()
                         .isSame(dayjs(), 'day'),
@@ -277,7 +277,7 @@
         </q-table>
 
         <q-dialog v-model="showpauseDialog" persistent>
-          <q-card class="dialog-card">
+          <q-card style="min-width: 400px; border-radius: 12px">
             <q-card-section
               class="row items-center bg-primary text-white q-py-xs"
             >
@@ -286,7 +286,6 @@
                 style="width: 1.8em; height: 1.8em; margin-right: 0.5em"
                 class="q-mr-sm"
               />
-
               <q-icon
                 :name="
                   selectedRow?.Status === 4 ? 'play_circle_outline' : 'pause'
@@ -294,8 +293,7 @@
                 size="2em"
                 class="q-mr-xs"
               />
-
-              <div class="text-h6">
+              <div class="text-h6 text-weight-medium">
                 {{
                   selectedRow?.Status === 4
                     ? "Reanudar proceso"
@@ -304,41 +302,53 @@
               </div>
             </q-card-section>
 
-            <q-card-section class="q-pt-md">
-              <span class="text-body1 text-blue-grey-8">
-                {{
-                  selectedRow?.Status === 4
-                    ? "¿Deseas reanudar el trabajo"
-                    : "¿Deseas pausar el trabajo"
-                }}
-                <span class="text-weight-bold text-blue-grey-10">
-                  "{{ selectedRow?.JobNumber }}"
-                </span>
-                ?
-              </span>
+            <q-card-section class="q-pt-md q-pb-md">
+              <div class="row items-center no-wrap q-gutter-sm">
+                <q-icon
+                  :name="selectedRow?.Status === 4 ? 'info' : 'warning'"
+                  :color="selectedRow?.Status === 4 ? 'positive' : 'amber-8'"
+                  size="2.5em"
+                />
+                <div class="col">
+                  <span class="text-body1 text-blue-grey-8">
+                    {{
+                      selectedRow?.Status === 4
+                        ? "¿Deseas reanudar el trabajo"
+                        : "¿Deseas pausar el trabajo"
+                    }}
+                    <span class="text-weight-bold text-blue-grey-10">
+                      "{{ selectedRow?.JobNumber }}"
+                    </span>
+                    ?
+                  </span>
+                </div>
+              </div>
             </q-card-section>
 
-            <q-card-actions align="right">
+            <q-card-actions align="right" class="q-pa-md bg-grey-1">
               <q-btn
                 flat
                 label="Cancelar"
-                class="rounded-btn"
+                class="rounded-btn q-px-md"
                 color="blue-grey-6"
                 v-close-popup
               />
               <q-btn
+                unelevated
+                :icon="selectedRow?.Status === 4 ? 'play_arrow' : 'pause'"
                 :label="selectedRow?.Status === 4 ? 'Reanudar' : 'Pausar'"
-                :color="selectedRow?.Status === 4 ? 'positive' : 'yellow-7'"
-                class="rounded-btn"
+                :color="selectedRow?.Status === 4 ? 'positive' : 'amber-8'"
+                text-color="white"
+                class="rounded-btn q-px-md"
                 @click="confirmpause"
-              /> </q-card-actions
-            >formatSmartDate
+              />
+            </q-card-actions>
           </q-card>
         </q-dialog>
 
         <!-- 🧩 MODAL -->
         <q-dialog v-model="showEndJobDialog" persistent>
-          <q-card style="min-width: 400px">
+          <q-card style="min-width: 450px; border-radius: 12px">
             <q-card-section
               class="row items-center bg-primary text-white q-py-xs"
             >
@@ -352,55 +362,108 @@
                 size="2em"
                 class="q-mr-xs"
               />
-              <div class="text-h6">
-                Finalizar trabajo: "{{ selectedRow?.JobNumber }}"
+              <div class="text-h6 text-weight-medium">
+                Finalizar trabajo:
+                <span class="text-weight-bold"
+                  >"{{ selectedRow?.JobNumber }}"</span
+                >
               </div>
             </q-card-section>
 
-            <q-card-section class="q-gutter-md">
-              <!-- Connectors A -->
-              <q-input
-                v-model.number="connectorsA"
-                type="number"
-                label="Connectors A"
-                :disable="connectorsAFromDB !== null"
-                :rules="[
-                  (val) =>
-                    connectorsAFromDB !== null ||
-                    val > 0 ||
-                    'Connectors A es obligatorio',
-                ]"
-              />
+            <q-card-section class="q-pt-md q-pb-none">
+              <p class="text-body2 text-blue-grey-8 q-mb-md">
+                Por favor, confirma las cantidades de Conectores por punta y el
+                tiempo de ciclo "real" para registrar la finalización.
+              </p>
 
-              <!-- Connectors B -->
-              <q-input
-                v-model.number="connectorsB"
-                type="number"
-                label="Connectors B"
-                :disable="connectorsBFromDB !== null"
-                :rules="[
-                  (val) =>
-                    connectorsBFromDB !== null ||
-                    val > 0 ||
-                    'Connectors B es obligatorio',
-                ]"
-              />
+              <div class="row q-col-gutter-md">
+                <div class="col-12 col-sm-6">
+                  <q-input
+                    v-model.number="connectorsA"
+                    type="number"
+                    label="Cx A (Connectors)"
+                    outlined
+                    dense
+                    color="primary"
+                    :disable="connectorsAFromDB !== null"
+                    :rules="[
+                      (val) =>
+                        connectorsAFromDB !== null ||
+                        val > 0 ||
+                        'Cx A es obligatorio',
+                    ]"
+                  >
+                    <template v-slot:prepend>
+                      <q-icon
+                        name="settings_input_component"
+                        color="blue-grey-4"
+                      />
+                    </template>
+                  </q-input>
+                </div>
 
-              <!-- Cycle Minutes (siempre manual) -->
-              <q-input
-                v-model.number="cycleMinutes"
-                type="number"
-                label="Minutos de ciclo (real)"
-                hint="Ingresa el tiempo real del proceso"
-                :rules="[(val) => val > 0 || 'Tiempo de ciclo es obligatorio']"
-              />
+                <div class="col-12 col-sm-6">
+                  <q-input
+                    v-model.number="connectorsB"
+                    type="number"
+                    label="Cx B (Connectors)"
+                    outlined
+                    dense
+                    color="primary"
+                    :disable="connectorsBFromDB !== null"
+                    :rules="[
+                      (val) =>
+                        connectorsBFromDB !== null ||
+                        val > 0 ||
+                        'Cx B es obligatorio',
+                    ]"
+                  >
+                    <template v-slot:prepend>
+                      <q-icon
+                        name="settings_input_component"
+                        color="blue-grey-4"
+                      />
+                    </template>
+                  </q-input>
+                </div>
+              </div>
+
+              <div class="row q-mt-sm">
+                <div class="col-12">
+                  <q-input
+                    v-model.number="cycleMinutes"
+                    type="number"
+                    label="Minutos de ciclo (real)"
+                    hint="Ingresa el tiempo real del proceso"
+                    outlined
+                    dense
+                    color="primary"
+                    :rules="[
+                      (val) => val > 0 || 'Tiempo de ciclo es obligatorio',
+                    ]"
+                  >
+                    <template v-slot:prepend>
+                      <q-icon name="timer" color="primary" />
+                    </template>
+                  </q-input>
+                </div>
+              </div>
             </q-card-section>
 
-            <q-card-actions align="right">
-              <q-btn flat label="Cancelar" v-close-popup />
+            <q-card-actions align="right" class="q-pa-md bg-grey-1">
               <q-btn
-                color="positive"
-                label="Finalizar"
+                flat
+                label="Cancelar"
+                color="blue-grey-6"
+                class="rounded-btn q-px-md"
+                v-close-popup
+              />
+              <q-btn
+                unelevated
+                icon="check_circle"
+                color="primary"
+                label="Finalizar Trabajo"
+                class="rounded-btn q-px-md"
                 :disable="
                   (connectorsAFromDB === null &&
                     (!connectorsA || connectorsA <= 0)) ||
@@ -574,14 +637,14 @@ const columns = [
   },
   {
     name: "ConnectorsA",
-    label: "ConnectorsA",
+    label: "Cx A",
     field: "ConnectorsA",
     align: "center",
     sortable: true,
   },
   {
     name: "ConnectorsB",
-    label: "ConnectorsB",
+    label: "Cx B",
     field: "ConnectorsB",
     align: "center",
     sortable: true,
