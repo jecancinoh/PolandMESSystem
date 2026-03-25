@@ -34,7 +34,8 @@
           icon="refresh"
           class="rounded-btn full-width"
           @click="loadData"
-          :loading="loading"
+          :loading="isLoading"
+          :disable="isLoading"
         />
       </q-item>
 
@@ -44,7 +45,7 @@
         <div
           class="text-caption text-weight-bold text-secondary text-center q-mb-sm"
         >
-          FILTRAR POR ESTADO
+          {{ $t("openjobs.fill") }}
         </div>
 
         <q-card
@@ -61,7 +62,8 @@
         >
           <q-card-section class="q-pa-sm flex items-center justify-between">
             <div class="text-subtitle2 text-bold">
-              <q-icon name="list" size="20px" class="q-mr-xs" /> Todos
+              <q-icon name="list" size="20px" class="q-mr-xs" />
+              {{ $t("openjobs.all") }}
             </div>
             <div class="text-h6 text-bold">{{ countTotal }}</div>
           </q-card-section>
@@ -83,8 +85,8 @@
         >
           <q-card-section class="q-pa-sm flex items-center justify-between">
             <div class="text-subtitle2 text-bold">
-              <q-icon name="play_circle" size="20px" class="q-mr-xs" /> En
-              Proceso
+              <q-icon name="play_circle" size="20px" class="q-mr-xs" />
+              {{ $t("openjobs.inprog") }}
             </div>
             <div class="text-h6 text-bold">{{ countEnProceso }}</div>
           </q-card-section>
@@ -108,7 +110,8 @@
         >
           <q-card-section class="q-pa-sm flex items-center justify-between">
             <div class="text-subtitle2 text-bold">
-              <q-icon name="timer" size="20px" class="q-mr-xs" /> Proceso Largo
+              <q-icon name="timer" size="20px" class="q-mr-xs" />
+              {{ $t("openjobs.longpro") }}
             </div>
             <div class="text-h6 text-bold">{{ countProcesoLargo }}</div>
           </q-card-section>
@@ -130,7 +133,8 @@
         >
           <q-card-section class="q-pa-sm flex items-center justify-between">
             <div class="text-subtitle2 text-bold">
-              <q-icon name="pause_circle" size="20px" class="q-mr-xs" /> Pausado
+              <q-icon name="pause_circle" size="20px" class="q-mr-xs" />
+              {{ $t("openjobs.pause") }}
             </div>
             <div class="text-h6 text-bold">{{ countPausado }}</div>
           </q-card-section>
@@ -167,6 +171,12 @@
 
     <q-page-container>
       <q-page padding>
+        <transition name="fade-overlay">
+          <div v-if="isLoading" class="loading-overlay-relative">
+            <div class="dual-ring-large"></div>
+            <div class="loading-text">{{ $t("Downtimes.upload") }}</div>
+          </div>
+        </transition>
         <div class="row items-center q-mb-md">
           <q-avatar square size="70px">
             <img
@@ -175,7 +185,7 @@
             />
           </q-avatar>
           <div class="text-h5 text-primary text-bold">
-            Monitoreo de Trabajos Activos
+            {{ $t("openjobs.title") }}
 
             <div class="text-subtitle2 text-secondary">
               {{ $t("hrxhr.update") }} {{ lastUpdateDisplay }}
@@ -185,7 +195,7 @@
               class="q-ml-sm"
               v-if="activeFilter !== 'TODOS'"
             >
-              Filtro: {{ activeFilter }}
+              {{ $t("openjobs.fill2") }} {{ activeFilterLabel }}
             </q-badge>
           </div>
         </div>
@@ -202,8 +212,8 @@
           :loading="loading"
           :pagination="pagination"
           @update:pagination="pagination = $event"
-          :rows-per-page-options="[5, 10, 20, 50]"
-          no-data-label="No se encontraron trabajos con el filtro actual."
+          :rows-per-page-options="[10, 20, 50, 0]"
+          :no-data-label="$t('openjobs.nodata')"
         >
           <template v-slot:body="props">
             <q-tr :props="props" class="custom-trackingrow">
@@ -213,7 +223,7 @@
                     :color="getAlertColor(col.value)"
                     class="text-bold q-pa-xs"
                   >
-                    {{ col.value }}
+                    {{ getAlertTranslation(col.value) }}
                   </q-badge>
                 </template>
 
@@ -227,7 +237,7 @@
                     no-wrap
                     color="primary"
                     icon="stop"
-                    label="Terminar Trabajo"
+                    :label="$t('openjobs.endjob1')"
                     class="rounded-btn"
                     @click="showendjobDialogFn(props.row)"
                   />
@@ -242,7 +252,7 @@
                     :color="props.row.Status === 4 ? 'amber-8' : 'primary'"
                     :icon="props.row.Status === 4 ? 'play_arrow' : 'stop'"
                     :label="
-                      props.row.Status === 4 ? 'Reanudar Trabajo' : col.value
+                      props.row.Status === 4 ? $t('openjobs.rewj') : col.value
                     "
                     class="rounded-btn"
                     @click="showpauseDialogFn(props.row)"
@@ -296,8 +306,8 @@
               <div class="text-h6 text-weight-medium">
                 {{
                   selectedRow?.Status === 4
-                    ? "Reanudar proceso"
-                    : "Pausar proceso"
+                    ? $t("openjobs.reproc")
+                    : $t("openjobs.pausep")
                 }}
               </div>
             </q-card-section>
@@ -313,8 +323,8 @@
                   <span class="text-body1 text-blue-grey-8">
                     {{
                       selectedRow?.Status === 4
-                        ? "¿Deseas reanudar el trabajo"
-                        : "¿Deseas pausar el trabajo"
+                        ? $t("openjobs.restartj")
+                        : $t("openjobs.pausej")
                     }}
                     <span class="text-weight-bold text-blue-grey-10">
                       "{{ selectedRow?.JobNumber }}"
@@ -328,7 +338,7 @@
             <q-card-actions align="right" class="q-pa-md bg-grey-1">
               <q-btn
                 flat
-                label="Cancelar"
+                :label="$t('openjobs.cancel')"
                 class="rounded-btn q-px-md"
                 color="blue-grey-6"
                 v-close-popup
@@ -336,7 +346,11 @@
               <q-btn
                 unelevated
                 :icon="selectedRow?.Status === 4 ? 'play_arrow' : 'pause'"
-                :label="selectedRow?.Status === 4 ? 'Reanudar' : 'Pausar'"
+                :label="
+                  selectedRow?.Status === 4
+                    ? $t('openjobs.rew')
+                    : $t('openjobs.pause3')
+                "
                 :color="selectedRow?.Status === 4 ? 'positive' : 'amber-8'"
                 text-color="white"
                 class="rounded-btn q-px-md"
@@ -363,7 +377,7 @@
                 class="q-mr-xs"
               />
               <div class="text-h6 text-weight-medium">
-                Finalizar trabajo:
+                {{ $t("openjobs.endjob") }}
                 <span class="text-weight-bold"
                   >"{{ selectedRow?.JobNumber }}"</span
                 >
@@ -372,8 +386,7 @@
 
             <q-card-section class="q-pt-md q-pb-none">
               <p class="text-body2 text-blue-grey-8 q-mb-md">
-                Por favor, confirma las cantidades de Conectores por punta y el
-                tiempo de ciclo "real" para registrar la finalización.
+                {{ $t("openjobs.alert1") }}
               </p>
 
               <div class="row q-col-gutter-md">
@@ -381,7 +394,7 @@
                   <q-input
                     v-model.number="connectorsA"
                     type="number"
-                    label="Cx A (Connectors)"
+                    :label="$t('openjobs.cxa')"
                     outlined
                     dense
                     color="primary"
@@ -406,7 +419,7 @@
                   <q-input
                     v-model.number="connectorsB"
                     type="number"
-                    label="Cx B (Connectors)"
+                    :label="$t('openjobs.cxb')"
                     outlined
                     dense
                     color="primary"
@@ -433,14 +446,12 @@
                   <q-input
                     v-model.number="cycleMinutes"
                     type="number"
-                    label="Minutos de ciclo (real)"
-                    hint="Ingresa el tiempo real del proceso"
+                    :label="$t('openjobs.min')"
+                    :hint="$t('openjobs.hint')"
                     outlined
                     dense
                     color="primary"
-                    :rules="[
-                      (val) => val > 0 || 'Tiempo de ciclo es obligatorio',
-                    ]"
+                    :rules="[(val) => val > 0 || $t('openjobs.minalert')]"
                   >
                     <template v-slot:prepend>
                       <q-icon name="timer" color="primary" />
@@ -453,7 +464,7 @@
             <q-card-actions align="right" class="q-pa-md bg-grey-1">
               <q-btn
                 flat
-                label="Cancelar"
+                :label="$t('openjobs.cancel')"
                 color="blue-grey-6"
                 class="rounded-btn q-px-md"
                 v-close-popup
@@ -462,7 +473,7 @@
                 unelevated
                 icon="check_circle"
                 color="primary"
-                label="Finalizar Trabajo"
+                :label="$t('openjobs.endjob')"
                 class="rounded-btn q-px-md"
                 :disable="
                   (connectorsAFromDB === null &&
@@ -499,6 +510,7 @@ const { t, locale } = useI18n();
 const reportStore = useReportStore();
 const drawer = ref(true);
 const loading = ref(false);
+const isLoading = ref(false);
 
 // Variable que guarda el filtro actual
 const activeFilter = ref("TODOS");
@@ -626,88 +638,85 @@ const pagination = ref({
   rowsPerPage: 10,
 });
 
-// Columnas
-const columns = [
+const columns = computed(() => [
   {
     name: "JobNumber",
-    label: "# Trabajo",
+    label: t("openjobs.label1"),
     field: "JobNumber",
     align: "center",
     sortable: true,
   },
   {
     name: "ConnectorsA",
-    label: "Cx A",
+    label: t("openjobs.label2"),
     field: "ConnectorsA",
     align: "center",
     sortable: true,
   },
   {
     name: "ConnectorsB",
-    label: "Cx B",
+    label: t("openjobs.label3"),
     field: "ConnectorsB",
     align: "center",
     sortable: true,
   },
   {
     name: "StationName",
-    label: "Estación",
+    label: t("openjobs.label4"),
     field: "StationName",
     align: "center",
     sortable: true,
   },
   {
     name: "Shift",
-    label: "Turno",
+    label: t("openjobs.label5"),
     field: "Shift",
     align: "center",
     sortable: true,
   },
-
   {
     name: "OperatorId1",
-    label: "ID Operador",
+    label: t("openjobs.label6"),
     field: "OperatorId1",
     align: "center",
     sortable: true,
   },
   {
     name: "FULL_NAME",
-    label: "Operador",
+    label: t("openjobs.label7"),
     field: "FULL_NAME",
     align: "center",
     sortable: true,
   },
-
   {
     name: "StartTime",
-    label: "Hora Inicio",
+    label: t("openjobs.label8"),
     field: "StartTime",
     align: "center",
     sortable: true,
   },
   {
     name: "TimeOpenFormatted",
-    label: "Tiempo Abierto",
+    label: t("openjobs.label9"),
     field: "TimeOpenFormatted",
     align: "center",
     sortable: true,
   },
   {
     name: "AlertType",
-    label: "Alerta",
+    label: t("openjobs.label10"),
     field: "AlertType",
     align: "center",
     sortable: true,
   },
   {
     name: "StatusDescription",
-    label: "Acciones",
+    label: t("openjobs.label11"),
     field: "StatusDescription",
     align: "center",
     sortable: true,
   },
-];
+]);
 
 const lastUpdateDisplay = computed(() => {
   return lastUpdate.value
@@ -723,10 +732,10 @@ const lastUpdateDisplay = computed(() => {
 });
 
 const loadData = async () => {
-  loading.value = true;
+  isLoading.value = true;
   await reportStore.fetchOpenJobs();
   lastUpdate.value = Date.now();
-  loading.value = false;
+  isLoading.value = false; // <-- indicar fin de carga
 };
 
 // --- CONTADORES PARA LOS BOTONES ---
@@ -754,6 +763,24 @@ const filteredEvents = computed(() => {
   );
 });
 
+// Propiedad computada que observa activeFilter e i18n
+const activeFilterLabel = computed(() => {
+  switch (activeFilter.value) {
+    case "PROCESO LARGO":
+      return t("openjobs.longpro");
+    case "RETRABAJO ABIERTO":
+      return t("openjobs.rework"); // Asegúrate de tener esta llave
+    case "PAUSADO":
+      return t("openjobs.pause");
+    case "EN PROCESO":
+      return t("openjobs.inprog");
+    case "TODOS":
+      return t("openjobs.all");
+    default:
+      return activeFilter.value;
+  }
+});
+
 const getAlertColor = (alertType) => {
   switch (alertType) {
     case "PROCESO LARGO":
@@ -768,6 +795,24 @@ const getAlertColor = (alertType) => {
       return "info";
   }
 };
+
+// Esta computed devuelve una función que acepta el tipo de alerta
+const getAlertTranslation = computed(() => {
+  return (alertType) => {
+    switch (alertType) {
+      case "PROCESO LARGO":
+        return t("openjobs.longpro");
+      case "RETRABAJO ABIERTO":
+        return t("openjobs.rework");
+      case "PAUSADO":
+        return t("openjobs.pause");
+      case "EN PROCESO":
+        return t("openjobs.inprog");
+      default:
+        return alertType;
+    }
+  };
+});
 
 // --- RELOJ Y FECHAS ---
 const fechaFormateada = ref("");
@@ -853,5 +898,57 @@ onUnmounted(() => {
 .clickable-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Overlay centrado y grande */
+.relative-container {
+  position: relative;
+}
+
+.loading-overlay-relative {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.dual-ring-large {
+  display: inline-block;
+  width: 100px;
+  height: 100px;
+}
+.dual-ring-large:after {
+  content: " ";
+  display: block;
+  width: 92px;
+  height: 92px;
+  margin: 4px;
+  border-radius: 50%;
+  border: 6px solid #1976d2;
+  border-color: #1976d2 transparent #1976d2 transparent;
+  animation: dual-ring 1.2s linear infinite;
+}
+
+@keyframes dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  margin-top: 1rem;
+  font-size: 1.3rem;
+  color: #1976d2;
+  font-weight: bold;
 }
 </style>

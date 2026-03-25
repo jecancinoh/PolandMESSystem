@@ -6,7 +6,7 @@
       show-if-above
       v-model="drawer"
       bordered
-      :width="250"
+      :width="240"
       class="bg-white column q-pa-md modern-drawer"
       behavior="desktop"
     >
@@ -613,7 +613,7 @@
 
                     <q-chip
                       v-for="shiftOption in availableShiftsForStationChartFilter.filter(
-                        (s) => s !== $t('Downtimes.all'),
+                        (s) => s !== $t('Downtimes.all')
                       )"
                       :key="shiftOption"
                       clickable
@@ -873,7 +873,7 @@
                       formatSmartDate(
                         props.row.start_adjusted,
                         props.row.EndTime,
-                        true,
+                        true
                       )
                     }}
                   </q-td>
@@ -884,7 +884,7 @@
                     :class="{
                       'text-red text-bold': isCrossedDay(
                         props.row.start_adjusted,
-                        props.row.EndTime,
+                        props.row.EndTime
                       ),
                     }"
                   >
@@ -892,7 +892,7 @@
                       formatSmartDate(
                         props.row.start_adjusted,
                         props.row.EndTime,
-                        false,
+                        false
                       )
                     }}
                   </q-td>
@@ -1091,16 +1091,16 @@ const fetchSummary = async () => {
     downtimeResults.value = ReportStore.downtimeResults || [];
 
     countNullDTID.value = downtimeResults.value.filter(
-      (item) => item.DTID == null,
+      (item) => item.DTID == null
     ).length;
     countOpenDowntimes.value = downtimeResults.value.filter(
-      (item) => item.EndTime == null,
+      (item) => item.EndTime == null
     ).length;
     countAutomaticDowntimes.value = downtimeResults.value.filter(
-      (d) => d.DowntimeType === false || d.DowntimeType === 0,
+      (d) => d.DowntimeType === false || d.DowntimeType === 0
     ).length;
     countManualDowntimes.value = downtimeResults.value.filter(
-      (d) => d.DowntimeType === true || d.DowntimeType === 1,
+      (d) => d.DowntimeType === true || d.DowntimeType === 1
     ).length;
 
     downtimeResultsFetched.value = true;
@@ -1217,7 +1217,7 @@ const exportDowntime = () => {
   // Ej: Reporte_de_Downtimes_20260312_20260315.xlsx
   const fileName = `${t("Downtimes.report").replace(
     / /g,
-    "_",
+    "_"
   )}_${safeStart}_${safeEnd}.xlsx`;
 
   // 10. Descargar el archivo
@@ -1315,7 +1315,7 @@ const openChart = async (stationId) => {
   const shiftsForCurrentStation = new Set(
     downtimeResults.value
       .filter((item) => item.StationID === stationId && item.Turno)
-      .map((item) => item.Turno),
+      .map((item) => item.Turno)
   );
 
   availableShiftsForStationChartFilter.value = [
@@ -1362,7 +1362,7 @@ const generateChartForStationModal = (stationId, shift) => {
 
   const stationData = downtimeResults.value.filter(
     (item) =>
-      item.StationID === stationId && (isAllShifts || item.Turno === shift),
+      item.StationID === stationId && (isAllShifts || item.Turno === shift)
   );
 
   if (!stationData.length) {
@@ -1478,14 +1478,14 @@ const applyShiftFilterAndRedrawChart = () => {
 
   generateChartForStationModal(
     selectedStationIdForChart.value,
-    selectedShiftForStationChart.value,
+    selectedShiftForStationChart.value
   );
 };
 
 //Función para obtener los turnos únicos de los resultados
 const updateAvailableOverallShifts = () => {
   const shifts = new Set(
-    downtimeResults.value.map((item) => item.Turno).filter((t) => t), // elimina null/undefined
+    downtimeResults.value.map((item) => item.Turno).filter((t) => t) // elimina null/undefined
   );
   availableOverallShifts.value = ["Todos", ...Array.from(shifts).sort()];
 };
@@ -1516,6 +1516,7 @@ const prepareOverallDowntimeDataByShift = () => {
   }));
 };
 
+// Función para generar el gráfico
 const generateOverallDowntimeChart = () => {
   const container = document.getElementById("overallDowntimeChart");
   if (!container) return;
@@ -1536,31 +1537,38 @@ const generateOverallDowntimeChart = () => {
   // Generar HTML para subtítulos
   let shiftTotalsHtml = "";
   const shiftsPresent = Object.keys(totalsByShift).filter(
-    (t) => totalsByShift[t] > 0,
+    (t) => totalsByShift[t] > 0
   );
   if (shiftsPresent.length) {
     shiftTotalsHtml += `<div style="text-align:center; font-size:0.9rem; color:#555; margin-top:5px;">`;
     shiftsPresent.forEach((turno, index) => {
-      shiftTotalsHtml += `<span>${turno}: <b>${totalsByShift[turno]} min</b></span>`;
+      shiftTotalsHtml += `<span>${turno}: <b>${totalsByShift[turno]} ${t(
+        "Downtimes.min"
+      )}</b></span>`;
       if (index < shiftsPresent.length - 1) shiftTotalsHtml += ` &nbsp; `;
     });
     shiftTotalsHtml += `</div>`;
   }
 
   const dateRangeHtml = `<div style="text-align:center; font-size:0.9rem; color:#555; margin-top:5px;">
-    (Del ${currentStartDate.value || TitleStartDate.value} al ${
-      currentEndDate.value ||
-      TitleEndDate.value ||
-      currentStartDate.value ||
-      TitleStartDate.value
-    })
+    (${t("Downtimes.rango")} ${
+    currentStartDate.value || TitleStartDate.value
+  } - ${
+    currentEndDate.value ||
+    TitleEndDate.value ||
+    currentStartDate.value ||
+    TitleStartDate.value
+  })
   </div>`;
 
   Highcharts.chart(container, {
     chart: { type: "pie", animation: true },
     title: {
       useHTML: true,
-      text: `Downtime total por razón (Turno: ${selectedOverallShift.value}) - Total: ${totalMinutes} min`,
+      text: t("Downtimes.totalByReason", {
+        shift: selectedOverallShift.value,
+        total: totalMinutes,
+      }),
     },
     subtitle: {
       useHTML: true,
@@ -1568,7 +1576,9 @@ const generateOverallDowntimeChart = () => {
       style: { fontSize: "0.9rem", color: "#555", marginTop: "5px" },
     },
     tooltip: {
-      pointFormat: "<b>{point.y} minutos</b> ({point.percentage:.1f}%)",
+      pointFormat: `<b>{point.y} ${t(
+        "Downtimes.min"
+      )}</b> ({point.percentage:.1f}%)`,
     },
     plotOptions: {
       pie: {
@@ -1576,16 +1586,31 @@ const generateOverallDowntimeChart = () => {
         cursor: "pointer",
         dataLabels: {
           enabled: true,
-          format: "{point.name}: {point.y} min",
+          format: `{point.name}: {point.y} ${t("Downtimes.min")}`,
           style: { fontWeight: "bold", color: "#000" },
         },
       },
     },
-    series: [{ name: "Minutos", colorByPoint: true, data }],
+    series: [{ name: t("Downtimes.totalmin"), colorByPoint: true, data }],
     credits: { enabled: false },
     accessibility: { enabled: false },
   });
 };
+
+// 🔹 Watch para actualizar el gráfico al cambiar idioma o filtros
+watch(
+  [
+    locale, // cambio de idioma
+    selectedOverallShift,
+    downtimeResults,
+    currentStartDate,
+    currentEndDate,
+  ],
+  () => {
+    generateOverallDowntimeChart();
+  },
+  { deep: true } // necesario para observar arrays/objetos como downtimeResults
+);
 
 /**
  * Genera el HTML de la tabla de minutos de downtime por línea, razón y turno
@@ -1630,12 +1655,12 @@ const generateDowntimeTableHtml = (results) => {
   const shiftHeaders = sortedShifts
     .map(
       (shift) =>
-        `<th style="padding:6px; border-bottom:1px solid #ddd; text-align:center; color:white;">${shift}</th>`,
+        `<th style="padding:6px; border-bottom:1px solid #ddd; text-align:center; color:white;">${shift}</th>`
     )
     .join("");
 
   const sortedLines = Object.keys(groupedDataForTable).sort(
-    (a, b) => groupedDataForTable[b].total - groupedDataForTable[a].total,
+    (a, b) => groupedDataForTable[b].total - groupedDataForTable[a].total
   );
 
   let tableRowsHtml = "";
@@ -1665,7 +1690,7 @@ const generateDowntimeTableHtml = (results) => {
 
     // Fila por razón dentro de la línea
     const sortedReasons = Object.keys(lineData.reasons).sort(
-      (a, b) => lineData.reasons[b].total - lineData.reasons[a].total,
+      (a, b) => lineData.reasons[b].total - lineData.reasons[a].total
     );
 
     sortedReasons.forEach((reason) => {
@@ -1675,7 +1700,7 @@ const generateDowntimeTableHtml = (results) => {
           (shift) =>
             `<td style="padding:3px; border-bottom:1px solid #eee; text-align:center;">${
               reasonData.shifts[shift] || 0
-            }</td>`,
+            }</td>`
         )
         .join("");
 
@@ -1695,7 +1720,7 @@ const generateDowntimeTableHtml = (results) => {
       (shift) =>
         `<td style="padding:5px; border-top:2px solid #aaa; text-align:right;">${
           grandTotalByShift[shift] || 0
-        }</td>`,
+        }</td>`
     )
     .join("");
 
@@ -1735,7 +1760,7 @@ const updateSidebarTable = () => {
 
   if (selectedOverallShift.value !== "Todos") {
     filteredResults = filteredResults.filter(
-      (item) => item.Turno === selectedOverallShift.value,
+      (item) => item.Turno === selectedOverallShift.value
     );
   }
 
@@ -1802,21 +1827,21 @@ const generateColumnChartByDay = () => {
   });
 
   const sortedDates = Array.from(datesSet).sort(
-    (a, b) => new Date(a) - new Date(b),
+    (a, b) => new Date(a) - new Date(b)
   );
   const allReasons = Array.from(reasonsSet).sort();
 
   const seriesData = allReasons.map((reason) => ({
     name: reason,
     data: sortedDates.map(
-      (date) => groupedByDateAndReason[date]?.[reason] || 0,
+      (date) => groupedByDateAndReason[date]?.[reason] || 0
     ),
     color: reasonColors[reason] || "#A9A9A9",
   }));
 
   const totalOverall = seriesData.reduce(
     (sum, series) => sum + series.data.reduce((a, b) => a + b, 0),
-    0,
+    0
   );
 
   Highcharts.chart(container, {
@@ -1832,11 +1857,11 @@ const generateColumnChartByDay = () => {
       </div>
       <div style="text-align:center; font-size:1rem; color:#555; margin-top:5px;">
         (Del ${currentStartDate.value || TitleStartDate.value} al ${
-          currentEndDate.value ||
-          TitleEndDate.value ||
-          currentStartDate.value ||
-          TitleStartDate.value
-        })
+        currentEndDate.value ||
+        TitleEndDate.value ||
+        currentStartDate.value ||
+        TitleStartDate.value
+      })
       </div>
     `,
     },
@@ -1940,7 +1965,7 @@ const generateColumnChartByStation = () => {
 
   const sortedStations = filteredStations.sort(
     (a, b) =>
-      (stationToProductionOrder[a] || 0) - (stationToProductionOrder[b] || 0),
+      (stationToProductionOrder[a] || 0) - (stationToProductionOrder[b] || 0)
   );
 
   const allReasons = Array.from(reasonsInFilteredData).sort();
@@ -1948,7 +1973,7 @@ const generateColumnChartByStation = () => {
   const seriesDataByStation = allReasons.map((reason) => ({
     name: reason,
     data: sortedStations.map(
-      (station) => groupedByStationAndReason[station]?.[reason] || 0,
+      (station) => groupedByStationAndReason[station]?.[reason] || 0
     ),
     color: reasonColors[reason] || reasonColors["Desconocido"],
   }));
@@ -1972,7 +1997,7 @@ const generateColumnChartByStation = () => {
     const totalForStation = allReasons.reduce(
       (acc, reason) =>
         acc + (groupedByStationAndReason[station]?.[reason] || 0),
-      0,
+      0
     );
     if (totalForStation > yAxisMaxForStationChart)
       yAxisMaxForStationChart = totalForStation;
@@ -1982,7 +2007,7 @@ const generateColumnChartByStation = () => {
   // Construir totales por turno HTML
   let shiftTotalsHtml = "";
   const shiftsPresent = Object.keys(totalsByShiftForStationChart).filter(
-    (t) => totalsByShiftForStationChart[t] > 0,
+    (t) => totalsByShiftForStationChart[t] > 0
   );
   if (shiftsPresent.length) {
     shiftTotalsHtml += `<div style="text-align:center; font-size:0.8rem; color:#666; margin-top:8px;">`;
@@ -2003,22 +2028,22 @@ const generateColumnChartByStation = () => {
         <span>Minutos de Downtime por Estación ${
           selectedReason.value !== "Todos" ? `(${selectedReason.value})` : ""
         }${
-          selectedLineValue.value !== "Todas"
-            ? ` (Línea: ${selectedLineValue.value})`
-            : ""
-        }${
-          selectedShiftValue.value !== "Todos"
-            ? ` (Turno: ${selectedShiftValue.value})`
-            : ""
-        }</span>
+        selectedLineValue.value !== "Todas"
+          ? ` (Línea: ${selectedLineValue.value})`
+          : ""
+      }${
+        selectedShiftValue.value !== "Todos"
+          ? ` (Turno: ${selectedShiftValue.value})`
+          : ""
+      }</span>
       </div>
       <div style="text-align:center; font-size:1rem; color:#555; margin-top:5px;">
        (Del ${currentStartDate.value || TitleStartDate.value} al ${
-         currentEndDate.value ||
-         TitleEndDate.value ||
-         currentStartDate.value ||
-         TitleStartDate.value
-       })
+        currentEndDate.value ||
+        TitleEndDate.value ||
+        currentStartDate.value ||
+        TitleStartDate.value
+      })
       </div>
       ${shiftTotalsHtml}
     `,
@@ -2067,7 +2092,7 @@ const generateColumnChartByStation = () => {
   nextTick(() => {
     Highcharts.chart(
       "overallDowntimeChartStation",
-      chartOptionsByStation.value,
+      chartOptionsByStation.value
     );
   });
 };
@@ -2380,14 +2405,10 @@ watch(downtimeResultsFetched, async (fetched) => {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.3rem;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   max-width: calc(25% - 0.6rem);
   min-width: 100px;
-  box-shadow:
-    0px 2px 4px rgba(0, 0, 0, 0.1),
-    0px 1px 2px rgba(0, 0, 0, 0.08);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.08);
 }
 .station-card:hover {
   transform: translateY(-3px);
