@@ -611,17 +611,16 @@ const cancelEdit = () => {
 // 🔹 Confirmar antes de limpiar toda la tabla
 function confirmClearTable() {
   $q.dialog({
-    title: "Confirmar eliminación",
-    message:
-      "¿Estás seguro de que deseas borrar todos los registros? Esta acción no se puede deshacer.",
+    title: t("employeeRegister.delete.title"),
+    message: t("employeeRegister.notifications.confirm"),
     cancel: true,
     persistent: true,
     ok: {
-      label: "Sí, borrar",
+      label: t("employeeRegister.notifications.dleteok"),
       color: "negative",
     },
     cancel: {
-      label: "Cancelar",
+      label: t("employeeRegister.buttons.cancel"),
       color: "primary",
       flat: true,
     },
@@ -672,9 +671,9 @@ const saveEmployee = async () => {
   };
 
   // 1.5 🔒 Diálogo de Confirmación
-$q.dialog({
-  title: t("employeeRegister.title"),
-  message: `
+  $q.dialog({
+    title: t("employeeRegister.title"),
+    message: `
     <p class="text-bold">
       ${t("employeeRegister.confirmQuestion")}
     </p>
@@ -699,18 +698,18 @@ $q.dialog({
       ${t("employeeRegister.warning")}
     </p>
   `,
-  html: true,
-  cancel: true,
-  ok: {
-    label: t("common.yesRegister"),
-    color: "positive",
-  },
-  cancel: {
-    label: t("common.cancel"),
-    color: "grey",
-  },
-  persistent: true,
-})
+    html: true,
+    cancel: true,
+    ok: {
+      label: t("common.yesRegister"),
+      color: "positive",
+    },
+    cancel: {
+      label: t("common.cancel"),
+      color: "grey",
+    },
+    persistent: true,
+  })
 
     .onOk(async () => {
       // ⬇️ TODO EL CONTENIDO ORIGINAL DE LA FUNCIÓN SE MUEVE AQUÍ
@@ -723,16 +722,15 @@ $q.dialog({
         // 3️⃣ Llamada al Store para guardar en SQL
         const result = await store.insertEmployee(newEmployee);
 
-         if (!result.success) {
-      $q.notify({
-        color: "warning",
-        message:
-          result.message ||
-          t("employeeRegister.notifications.saveWarning"),
-        position: "top",
-      });
-      return;
-    }
+        if (!result.success) {
+          $q.notify({
+            color: "warning",
+            message:
+              result.message || t("employeeRegister.notifications.saveWarning"),
+            position: "top",
+          });
+          return;
+        }
 
         // 4️⃣ Guardar en localStorage (NOTA: Revisar las directivas sobre el uso de DB vs LocalStorage)
         const storedEmployees =
@@ -755,20 +753,20 @@ $q.dialog({
 
         // 6️⃣ Notificación de éxito
         $q.notify({
-      color: "positive",
-      message: t("employeeRegister.notifications.saveSuccess"),
-      position: "top",
-    });
+          color: "positive",
+          message: t("employeeRegister.notifications.saveSuccess"),
+          position: "top",
+        });
 
         // 7️⃣ Limpiar campos
         clearFields();
       } catch (error) {
         console.error("Error al guardar el empleado:", error);
         $q.notify({
-      color: "negative",
-      message: t("employeeRegister.notifications.saveError"),
-      position: "top",
-    });
+          color: "negative",
+          message: t("employeeRegister.notifications.saveError"),
+          position: "top",
+        });
       } finally {
         // Se restablece isSaving.value = false, ya sea que haya éxito o error
         isSaving.value = false;
@@ -778,11 +776,11 @@ $q.dialog({
     .onCancel(() => {
       // No hacemos nada si cancela, pero puedes agregar un notify si lo deseas
       $q.notify({
-    color: "info",
-    message: t("employeeRegister.notifications.cancelled"),
-    position: "top",
-    timeout: 1000,
-  });
+        color: "info",
+        message: t("employeeRegister.notifications.cancelled"),
+        position: "top",
+        timeout: 1000,
+      });
     });
   // 💡 IMPORTANTE: Si el diálogo está activo, isSaving.value debe permanecer false hasta que haga clic en OK.
 };
@@ -790,13 +788,13 @@ $q.dialog({
 // Nueva función para eliminar
 const handleDeleteEmployee = (employeeNumToDelete) => {
   $q.dialog({
-  title: t("employeeRegister.delete.title"),
-  message: t("employeeRegister.delete.message", {
-    employeeNumber: employeeNumToDelete,
-  }),
-  cancel: true,
-  persistent: true,
-}).onOk(() => {
+    title: t("employeeRegister.delete.title"),
+    message: t("employeeRegister.delete.message", {
+      employeeNumber: employeeNumToDelete,
+    }),
+    cancel: true,
+    persistent: true,
+  }).onOk(() => {
     // 1️⃣ Elimina de la lista local
     employees.value = employees.value.filter(
       (emp) => emp.employeeNumber !== employeeNumToDelete
@@ -807,15 +805,14 @@ const handleDeleteEmployee = (employeeNumToDelete) => {
 
     // 3️⃣ Notificación de éxito
     $q.notify({
-  color: "positive",
-  position: "top",
-  message: t("employeeRegister.notifications.deleteSuccess", {
-    employeeNumber: employeeNumToDelete,
-  }),
-  icon: "check_circle",
-  timeout: 2500,
-});
-
+      color: "positive",
+      position: "top",
+      message: t("employeeRegister.notifications.deleteSuccess", {
+        employeeNumber: employeeNumToDelete,
+      }),
+      icon: "check_circle",
+      timeout: 2500,
+    });
   });
 };
 

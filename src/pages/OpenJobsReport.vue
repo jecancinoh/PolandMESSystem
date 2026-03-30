@@ -33,7 +33,7 @@
           color="primary"
           icon="refresh"
           class="rounded-btn full-width"
-          @click="loadData"
+          @click="confirmUpdate"
           :loading="isLoading"
           :disable="isLoading"
         />
@@ -147,11 +147,21 @@
       <div class="q-pa-sm flex justify-center">
         <div
           class="text-center q-pa-sm bg-grey-2 rounded-borders border-primary shadow-up-1"
+          style="min-width: 200px"
         >
+          <div
+            class="text-overline text-primary q-mb-xs"
+            style="line-height: 1"
+          >
+            <q-icon name="schedule" size="xs" class="q-mr-xs" />
+            {{ zonaHorariaLabel }}
+          </div>
+
           <div class="text-h5 text-bold text-primary">
             {{ horaFormateada }}
           </div>
-          <div class="text-caption text-grey-8">
+
+          <div class="text-caption text-grey-8 text-capitalize">
             {{ fechaFormateada }}
           </div>
         </div>
@@ -190,6 +200,10 @@
             <div class="text-subtitle2 text-secondary">
               {{ $t("hrxhr.update") }} {{ lastUpdateDisplay }}
             </div>
+
+            <div class="text-subtitle2 text-negative">
+              {{ $t("openjobs.subtitle") }}
+            </div>
             <q-badge
               color="primary"
               class="q-ml-sm"
@@ -205,16 +219,23 @@
           table-header-class="custom-header"
           flat
           bordered
-          wrap-cells
           :rows="filteredEvents"
           :columns="columns"
           row-key="Id"
-          :loading="loading"
-          :pagination="pagination"
-          @update:pagination="pagination = $event"
-          :rows-per-page-options="[10, 20, 50, 0]"
-          :no-data-label="$t('openjobs.nodata')"
+          v-model:pagination="pagination"
         >
+          <template v-slot:header-cell="props">
+            <q-th :props="props" class="custom-header text-center">
+              <q-icon
+                v-if="props.col.icon"
+                :name="props.col.icon"
+                size="1.2em"
+                class="q-mr-xs"
+              />
+              {{ props.col.label }}
+            </q-th>
+          </template>
+
           <template v-slot:body="props">
             <q-tr :props="props" class="custom-trackingrow">
               <q-td v-for="col in props.cols" :key="col.name" :props="props">
@@ -249,12 +270,29 @@
                     size="md"
                     no-caps
                     no-wrap
-                    :color="props.row.Status === 4 ? 'amber-8' : 'primary'"
-                    :icon="props.row.Status === 4 ? 'play_arrow' : 'stop'"
+                    :color="
+                      props.row.Status === 2 || col.value === 'CERRADO'
+                        ? 'negative'
+                        : props.row.Status === 4
+                        ? 'amber-8'
+                        : 'primary'
+                    "
+                    :icon="
+                      props.row.Status === 2 || col.value === 'CERRADO'
+                        ? 'done'
+                        : props.row.Status === 4
+                        ? 'play_arrow'
+                        : 'stop'
+                    "
                     :label="
-                      props.row.Status === 4 ? $t('openjobs.rewj') : col.value
+                      props.row.Status === 2 || col.value === 'CERRADO'
+                        ? $t('openjobs.close')
+                        : props.row.Status === 4
+                        ? $t('openjobs.rewj')
+                        : col.value
                     "
                     class="rounded-btn"
+                    :disable="props.row.Status === 2 || col.value === 'CERRADO'"
                     @click="showpauseDialogFn(props.row)"
                   />
                 </template>
@@ -278,8 +316,28 @@
                   </span>
                 </template>
 
+                <template v-else-if="col.name === 'JobNumber'">
+                  <div class="row items-center no-wrap justify-center">
+                    <q-chip
+                      v-if="props.row._isModifiedLocally"
+                      :color="props.row._chipColor || 'primary'"
+                      text-color="white"
+                      dense
+                      icon="edit"
+                      class="text-bold"
+                      style="padding: 2px 8px; font-size: 13px"
+                    >
+                      {{ col.value }}
+                    </q-chip>
+
+                    <span v-else class="text-bold text-blue-grey-10">
+                      {{ col.value }}
+                    </span>
+                  </div>
+                </template>
+
                 <template v-else>
-                  {{ col.value }}
+                  <span class="text-bold">{{ col.value }}</span>
                 </template>
               </q-td>
             </q-tr>
@@ -403,7 +461,7 @@
                       (val) =>
                         connectorsAFromDB !== null ||
                         val > 0 ||
-                        'Cx A es obligatorio',
+                        $t('openjobs.cxalert'),
                     ]"
                   >
                     <template v-slot:prepend>
@@ -428,7 +486,7 @@
                       (val) =>
                         connectorsBFromDB !== null ||
                         val > 0 ||
-                        'Cx B es obligatorio',
+                        $t('openjobs.cxbalert'),
                     ]"
                   >
                     <template v-slot:prepend>
@@ -494,23 +552,30 @@
 </template>
 
 <script setup>
-import { Notify } from "quasar";
+import { Notify, useQuasar } from "quasar";
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useReportStore } from "src/stores/ReportStore";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import "dayjs/locale/es";
+import "dayjs/locale/en";
 import LanguageToggle from "src/components/LanguageToggle.vue";
 import { useI18n } from "vue-i18n";
 
 dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const { t, locale } = useI18n();
+
+const $q = useQuasar();
 
 const reportStore = useReportStore();
 const drawer = ref(true);
 const loading = ref(false);
 const isLoading = ref(false);
+
+const localJobsList = ref([]);
 
 // Variable que guarda el filtro actual
 const activeFilter = ref("TODOS");
@@ -565,8 +630,32 @@ const confirmpause = async () => {
   if (success) {
     showpauseDialog.value = false;
 
-    // 🔄 refrescar datos
-    await reportStore.fetchOpenJobs();
+    const index = localJobsList.value.findIndex(
+      (job) => job.Id === selectedRow.value.Id
+    );
+
+    if (index !== -1) {
+      if (localJobsList.value[index].Status === 4) {
+        // Estaba pausado, lo pasamos a proceso
+        localJobsList.value[index].Status = 1;
+        localJobsList.value[index].AlertType = "EN PROCESO";
+        localJobsList.value[index].StatusDescription = "EN PROCESO";
+        // 🟢 Verde al reanudar
+        localJobsList.value[index]._chipColor = "positive";
+      } else {
+        // Estaba en proceso, lo pasamos a pausado
+        localJobsList.value[index].Status = 4;
+        localJobsList.value[index].AlertType = "PAUSADO";
+        localJobsList.value[index].StatusDescription = "PAUSADO";
+        // 🟠 Naranja al pausar
+        localJobsList.value[index]._chipColor = "amber-8";
+      }
+
+      // 🔥 INDICADORES DE MODIFICACIÓN
+      localJobsList.value[index]._isModifiedLocally = true;
+
+      localStorage.setItem("openJobsData", JSON.stringify(localJobsList.value));
+    }
   }
 };
 
@@ -574,31 +663,22 @@ const confirmpause = async () => {
 const validateAndCompleteJob = async () => {
   if (!selectedRow.value) return;
 
-  // Validar ConnectorsA si venía null
   if (
     connectorsAFromDB.value === null &&
     (!connectorsA.value || connectorsA.value <= 0)
   ) {
-    Notify.create({
-      type: "warning",
-      message: "Ingresa Connectors A válido",
-    });
+    Notify.create({ type: "warning", message: "Ingresa Connectors A válido" });
     return;
   }
 
-  // Validar ConnectorsB si venía null
   if (
     connectorsBFromDB.value === null &&
     (!connectorsB.value || connectorsB.value <= 0)
   ) {
-    Notify.create({
-      type: "warning",
-      message: "Ingresa Connectors B válido",
-    });
+    Notify.create({ type: "warning", message: "Ingresa Connectors B válido" });
     return;
   }
 
-  // Validar ciclo siempre
   if (!cycleMinutes.value || cycleMinutes.value <= 0) {
     Notify.create({
       type: "warning",
@@ -607,32 +687,45 @@ const validateAndCompleteJob = async () => {
     return;
   }
 
-  // Todos los datos correctos → llamar al store
   const success = await reportStore.completeProduction(
     selectedRow.value.Id,
-    connectorsA.value,
-    connectorsB.value,
-    cycleMinutes.value
+    Number(connectorsA.value),
+    Number(connectorsB.value),
+    Number(cycleMinutes.value)
   );
 
   if (success) {
     showEndJobDialog.value = false;
 
-    // limpiar valores
     connectorsA.value = 0;
     connectorsB.value = 0;
     cycleMinutes.value = null;
     connectorsAFromDB.value = null;
     connectorsBFromDB.value = null;
 
-    // 🔄 refrescar datos
-    await reportStore.fetchOpenJobs();
+    const index = localJobsList.value.findIndex(
+      (job) => job.Id === selectedRow.value.Id
+    );
+
+    if (index !== -1) {
+      // Cambiamos el estatus a Cerrado
+      localJobsList.value[index].Status = 2;
+      localJobsList.value[index].AlertType = "CERRADO";
+      localJobsList.value[index].StatusDescription = "CERRADO";
+
+      // 🔴 Rojo al terminar el trabajo
+      localJobsList.value[index]._chipColor = "negative";
+
+      // 🔥 INDICADORES DE MODIFICACIÓN
+      localJobsList.value[index]._isModifiedLocally = true;
+
+      localStorage.setItem("openJobsData", JSON.stringify(localJobsList.value));
+    }
   }
 };
 
-// Paginación
 const pagination = ref({
-  sortBy: "desc",
+  sortBy: "StartTime",
   descending: false,
   page: 1,
   rowsPerPage: 10,
@@ -645,6 +738,7 @@ const columns = computed(() => [
     field: "JobNumber",
     align: "center",
     sortable: true,
+    icon: "tag",
   },
   {
     name: "ConnectorsA",
@@ -652,6 +746,7 @@ const columns = computed(() => [
     field: "ConnectorsA",
     align: "center",
     sortable: true,
+    icon: "settings_input_component",
   },
   {
     name: "ConnectorsB",
@@ -659,6 +754,7 @@ const columns = computed(() => [
     field: "ConnectorsB",
     align: "center",
     sortable: true,
+    icon: "settings_input_component",
   },
   {
     name: "StationName",
@@ -666,6 +762,7 @@ const columns = computed(() => [
     field: "StationName",
     align: "center",
     sortable: true,
+    icon: "precision_manufacturing",
   },
   {
     name: "Shift",
@@ -673,6 +770,7 @@ const columns = computed(() => [
     field: "Shift",
     align: "center",
     sortable: true,
+    icon: "event_repeat",
   },
   {
     name: "OperatorId1",
@@ -680,6 +778,7 @@ const columns = computed(() => [
     field: "OperatorId1",
     align: "center",
     sortable: true,
+    icon: "badge",
   },
   {
     name: "FULL_NAME",
@@ -687,6 +786,7 @@ const columns = computed(() => [
     field: "FULL_NAME",
     align: "center",
     sortable: true,
+    icon: "person",
   },
   {
     name: "StartTime",
@@ -694,6 +794,7 @@ const columns = computed(() => [
     field: "StartTime",
     align: "center",
     sortable: true,
+    icon: "today",
   },
   {
     name: "TimeOpenFormatted",
@@ -701,6 +802,7 @@ const columns = computed(() => [
     field: "TimeOpenFormatted",
     align: "center",
     sortable: true,
+    icon: "timer",
   },
   {
     name: "AlertType",
@@ -708,6 +810,7 @@ const columns = computed(() => [
     field: "AlertType",
     align: "center",
     sortable: true,
+    icon: "warning",
   },
   {
     name: "StatusDescription",
@@ -715,6 +818,7 @@ const columns = computed(() => [
     field: "StatusDescription",
     align: "center",
     sortable: true,
+    icon: "info",
   },
 ]);
 
@@ -731,34 +835,82 @@ const lastUpdateDisplay = computed(() => {
     : "--/--/---- --:--:--";
 });
 
+// ⚠️ Alerta de confirmación antes de actualizar
+const confirmUpdate = () => {
+  $q.dialog({
+    title: t("openjobs.updatedata"),
+    message: t("openjobs.alertdata"),
+    cancel: {
+      label: t("openjobs.cancel"),
+      color: "blue-grey-6",
+      flat: true,
+    },
+    ok: {
+      label: t("configuration.update"),
+      color: "primary",
+      unelevated: true,
+    },
+    persistent: true,
+  }).onOk(() => {
+    // Si el usuario confirma, entonces disparamos la carga
+    loadData();
+  });
+};
+
 const loadData = async () => {
   isLoading.value = true;
   await reportStore.fetchOpenJobs();
+
+  // Guardar en localStorage como un string JSON
+  localStorage.setItem(
+    "openJobsData",
+    JSON.stringify(reportStore.openJobsList)
+  );
+
+  // Actualizar la variable local que alimenta la tabla
+  localJobsList.value = [...reportStore.openJobsList];
+
   lastUpdate.value = Date.now();
+  localStorage.setItem("openJobsLastUpdate", lastUpdate.value);
+
   isLoading.value = false; // <-- indicar fin de carga
 };
 
+const initData = () => {
+  const storedJobs = localStorage.getItem("openJobsData");
+  const storedUpdate = localStorage.getItem("openJobsLastUpdate");
+
+  if (storedJobs) {
+    // Si hay datos en localStorage, los usamos para que la tabla no dependa de la DB
+    localJobsList.value = JSON.parse(storedJobs);
+    if (storedUpdate) {
+      lastUpdate.value = parseInt(storedUpdate, 10);
+    }
+  } else {
+    // Si es la primera vez que entra y no hay datos locales, forzamos la carga
+    loadData();
+  }
+};
+
 // --- CONTADORES PARA LOS BOTONES ---
-const countTotal = computed(() => reportStore.openJobsList.length);
+const countTotal = computed(() => localJobsList.value.length);
 const countEnProceso = computed(
   () =>
-    reportStore.openJobsList.filter((job) => job.AlertType === "EN PROCESO")
-      .length
+    localJobsList.value.filter((job) => job.AlertType === "EN PROCESO").length
 );
 const countProcesoLargo = computed(
   () =>
-    reportStore.openJobsList.filter((job) => job.AlertType === "PROCESO LARGO")
+    localJobsList.value.filter((job) => job.AlertType === "PROCESO LARGO")
       .length
 );
 const countPausado = computed(
-  () =>
-    reportStore.openJobsList.filter((job) => job.AlertType === "PAUSADO").length
+  () => localJobsList.value.filter((job) => job.AlertType === "PAUSADO").length
 );
 
 // --- FILTRADO DE LA TABLA ---
 const filteredEvents = computed(() => {
-  if (activeFilter.value === "TODOS") return reportStore.openJobsList;
-  return reportStore.openJobsList.filter(
+  if (activeFilter.value === "TODOS") return localJobsList.value;
+  return localJobsList.value.filter(
     (job) => job.AlertType === activeFilter.value
   );
 });
@@ -781,6 +933,7 @@ const activeFilterLabel = computed(() => {
   }
 });
 
+// Asigna el color al q-badge
 const getAlertColor = (alertType) => {
   switch (alertType) {
     case "PROCESO LARGO":
@@ -791,12 +944,14 @@ const getAlertColor = (alertType) => {
       return "amber-8";
     case "EN PROCESO":
       return "positive";
+    case "CERRADO":
+      return "negative"; // Puedes usar 'grey' o 'blue-grey' si prefieres que el badge cerrado no sea rojo
     default:
       return "info";
   }
 };
 
-// Esta computed devuelve una función que acepta el tipo de alerta
+// Asigna la traducción correcta
 const getAlertTranslation = computed(() => {
   return (alertType) => {
     switch (alertType) {
@@ -808,6 +963,8 @@ const getAlertTranslation = computed(() => {
         return t("openjobs.pause");
       case "EN PROCESO":
         return t("openjobs.inprog");
+      case "CERRADO":
+        return t("openjobs.close"); // 🔥 AQUÍ AGREGAMOS LA TRADUCCIÓN
       default:
         return alertType;
     }
@@ -818,22 +975,38 @@ const getAlertTranslation = computed(() => {
 const fechaFormateada = ref("");
 const horaFormateada = ref("");
 let intervaloId = null;
+const zonaHorariaLabel = ref(""); // Asegúrate de declarar este ref() arriba
 
 const mostrarHora = () => {
   const currentLang = localStorage.getItem("lang") || "es";
-  const ahora = dayjs().locale(currentLang);
+  const ahora = dayjs().tz("Europe/Warsaw").locale(currentLang);
+
+  // Traducción de la etiqueta según el selector
+  if (currentLang === "es") {
+    zonaHorariaLabel.value = "Hora Polonia";
+  } else if (currentLang === "pl") {
+    zonaHorariaLabel.value = "Czas w Polsce"; // "Hora en Polonia" en polaco
+  } else {
+    zonaHorariaLabel.value = "Poland Time";
+  }
+
+  // Formatos de fecha por idioma
   if (currentLang === "es") {
     fechaFormateada.value = ahora.format("dddd D [de] MMMM [del] YYYY");
+  } else if (currentLang === "pl") {
+    // En polaco suele usarse: dddd, D MMMM YYYY
+    fechaFormateada.value = ahora.format("dddd, D MMMM YYYY");
   } else {
     fechaFormateada.value = ahora.format("dddd D MMMM YYYY");
   }
+
   horaFormateada.value = ahora.format("hh:mm:ss A");
 };
 
 const formatSmartDate = (start, end = null, isStartTime = false) => {
   if (!start) return "-";
 
-  const startDate = dayjs.utc(start).local();
+  const startDate = dayjs.utc(start);
   const endDate = end ? dayjs.utc(end).local() : null;
   const now = dayjs();
 
@@ -853,7 +1026,7 @@ const formatSmartDate = (start, end = null, isStartTime = false) => {
 onMounted(() => {
   mostrarHora();
   intervaloId = setInterval(mostrarHora, 1000);
-  loadData();
+  initData();
 });
 
 onUnmounted(() => {
@@ -862,49 +1035,64 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Estilo base del header */
+:deep(.custom-header) {
+  background-color: #003153 !important; /* El azul oscuro de tu imagen */
+  color: white !important;
+}
+
+:deep(.custom-header th) {
+  font-weight: bold;
+  font-size: 14px;
+  white-space: nowrap !important; /* Evita que el texto se rompa */
+}
+
+/* FORZAR LA FLECHA A LA MISMA LÍNEA */
+:deep(.downtime-qtable .q-th__content) {
+  display: inline-flex !important; /* 🔥 CAMBIO IMPORTANTE */
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: nowrap !important;
+  width: 100%;
+}
+
+:deep(.downtime-qtable th) {
+  white-space: nowrap !important;
+}
+
+:deep(.downtime-qtable .q-th__content > span) {
+  white-space: nowrap !important;
+}
+
+/* Ajuste de la flecha de ordenamiento */
+:deep(.downtime-qtable .q-table__sort-icon) {
+  display: inline-block !important;
+  vertical-align: middle;
+  margin-left: 4px !important;
+  color: white !important;
+  opacity: 0.8;
+  font-size: 16px !important;
+}
+
+/* --- FILAS CEBRA (CAMBIO A CELESTE) --- */
+.downtime-qtable .custom-trackingrow:nth-child(even) {
+  /* Opción A: Celeste muy suave (recomendado) */
+  background-color: #e3f2fd !important;
+
+  /* Opción B: Azul un poco más intenso (si prefieres que se note más) */
+  /* background-color: #e1f5fe !important; */
+}
 .rounded-btn {
   border-radius: 10px;
   font-weight: bold;
   font-size: 12px;
-  width: auto; /* Se adapta al contenido */
-  min-width: unset; /* Elimina el tamaño mínimo forzado */
   border: 2px solid white;
 }
 
-:deep(.downtime-qtable .q-table__th) {
-  font-weight: 900 !important;
-}
-:deep(.downtime-qtable .q-table__sort-icon) {
-  color: white !important;
-  opacity: 1 !important;
-}
-:deep(.custom-header th) {
-  background-color: #003153 !important;
-  color: white !important;
-  font-weight: bold;
-  font-size: 16px;
-  text-align: center;
-}
-.custom-trackingrow:nth-child(even):not(.custom-header) {
-  background-color: #e9eef5;
-}
-.custom-trackingrow:hover:not(.custom-header) {
-  background-color: #d0e4ff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-.clickable-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.clickable-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-}
-
-/* Overlay centrado y grande */
+/* --- OVERLAY DE CARGA --- */
 .relative-container {
   position: relative;
 }
-
 .loading-overlay-relative {
   position: absolute;
   top: 0;
@@ -918,7 +1106,6 @@ onUnmounted(() => {
   align-items: center;
   z-index: 1000;
 }
-
 .dual-ring-large {
   display: inline-block;
   width: 100px;
@@ -935,7 +1122,6 @@ onUnmounted(() => {
   border-color: #1976d2 transparent #1976d2 transparent;
   animation: dual-ring 1.2s linear infinite;
 }
-
 @keyframes dual-ring {
   0% {
     transform: rotate(0deg);
@@ -944,7 +1130,6 @@ onUnmounted(() => {
     transform: rotate(360deg);
   }
 }
-
 .loading-text {
   margin-top: 1rem;
   font-size: 1.3rem;

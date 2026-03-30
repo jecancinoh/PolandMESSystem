@@ -5,12 +5,17 @@ import { createI18n } from "vue-i18n";
 export const messages = {
   es: {
     openjobs: {
+      updatedata: "Actualizar datos",
+      alertdata:
+        "Los datos de la tabla se van a actualizar desde el servidor. Los cambios locales o trabajos recién cerrados ya no serán visibles en esta lista. ¿Deseas continuar?",
+      close: "CERRADO",
       fill: "FILTRAR POR ESTADO",
       all: "Todos",
       inprog: "En Proceso",
       longpro: "Proceso Largo",
       pause: "Pausado",
       title: "Monitoreo de Trabajos Activos",
+      subtitle: "(Proceso Largo > 120min)",
       nodata: "No se encontraron trabajos con el filtro actual.",
       fill2: "Filtro:",
       endjob1: "Terminar Trabajo",
@@ -35,7 +40,7 @@ export const messages = {
       alertcxa: "Ingresa Connectors A válido",
       alertcxb: "Ingresa Connectors B válido",
       alertmin: "Ingresa un tiempo de ciclo válido",
-      label1: "# Trabajo",
+      label1: "Trabajo",
       label2: "Cx A",
       label3: "Cx B",
       label4: "Estación",
@@ -789,12 +794,17 @@ export const messages = {
 
   en: {
     openjobs: {
+      updatedata: "Update data",
+      alertdata:
+        "The table data will be updated from the server. Local changes or recently closed jobs will no longer be visible in this list. Do you want to continue?",
+      close: "CLOSED",
       fill: "FILTER BY STATUS",
       all: "All",
       inprog: "In Progress",
       longpro: "Long Process",
       pause: "Paused",
       title: "Active Jobs Monitoring",
+      subtitle: "(Long Process > 120 min)",
       nodata: "No jobs were found with the current filter.",
       fill2: "Filter:",
       endjob1: "Finish Job",
@@ -819,7 +829,7 @@ export const messages = {
       alertcxa: "Enter valid Connectors A",
       alertcxb: "Enter valid Connectors B",
       alertmin: "Enter a valid cycle time",
-      label1: "Job #",
+      label1: "Job",
       label2: "Cx A",
       label3: "Cx B",
       label4: "Station",
@@ -1604,12 +1614,17 @@ export const messages = {
 
   pl: {
     openjobs: {
+      updatedata: "Aktualizacja danych",
+      alertdata:
+        "Dane w tabeli zostaną zaktualizowane z serwera. Zmiany lokalne lub ostatnio zamknięte zadania nie będą już widoczne na tej liście. Czy chcesz kontynuować?",
+      close: "ZAMKNIĘTE",
       fill: "FILTRUJ WEDŁUG STATUSU",
       all: "Wszystkie",
       inprog: "W toku",
       longpro: "Długi proces",
       pause: "Wstrzymano",
       title: "Monitorowanie aktywnych zleceń",
+      subtitle: "(Długi Proces > 120 min)",
       nodata: "Nie znaleziono zadań z aktualnym filtrem.",
       fill2: "Filtr:",
       endjob1: "Zakończ zadanie",
@@ -1634,7 +1649,7 @@ export const messages = {
       alertcxa: "Wprowadź prawidłową ilość złączy A",
       alertcxb: "Wprowadź prawidłową ilość złączy B",
       alertmin: "Wprowadź prawidłowy czas cyklu",
-      label1: "# Zlecenia",
+      label1: "Zlecenia",
       label2: "Cx A",
       label3: "Cx B",
       label4: "Stacja",
