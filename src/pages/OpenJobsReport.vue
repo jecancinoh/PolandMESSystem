@@ -240,37 +240,94 @@
             <q-tr :props="props" class="custom-trackingrow">
               <q-td v-for="col in props.cols" :key="col.name" :props="props">
                 <template v-if="col.name === 'AlertType'">
-                  <q-badge
+                  <q-chip
                     :color="getAlertColor(col.value)"
-                    class="text-bold q-pa-xs"
+                    text-color="white"
+                    dense
+                    rounded
+                    class="text-bold q-px-sm q-py-xs"
                   >
+                    <q-icon
+                      :name="
+                        col.value === 'PAUSADO'
+                          ? 'pause_circle'
+                          : col.value === 'EN PROCESO'
+                          ? 'play_circle'
+                          : 'warning'
+                      "
+                      size="16px"
+                      class="q-mr-xs"
+                    />
                     {{ getAlertTranslation(col.value) }}
-                  </q-badge>
+                  </q-chip>
+                </template>
+
+                <template v-else-if="col.name === 'StationName'">
+                  <q-chip
+                    :color="getStationConfig(col.value).color"
+                    text-color="white"
+                    dense
+                    rounded
+                    outline
+                    class="text-bold q-px-sm q-py-xs"
+                  >
+                    <q-icon
+                      :name="getStationConfig(col.value).icon"
+                      size="14px"
+                      class="q-mr-xs"
+                    />
+                    {{ col.value }}
+                  </q-chip>
+                </template>
+
+                <template v-else-if="col.name === 'Shift'">
+                  <q-chip
+                    :color="getShiftConfig(col.value).color"
+                    text-color="white"
+                    dense
+                    rounded
+                    outline
+                    class="text-bold q-px-sm q-py-xs shadow-1"
+                  >
+                    <q-icon
+                      :name="getShiftConfig(col.value).icon"
+                      size="14px"
+                      class="q-mr-xs"
+                    />
+                    {{ col.value }}
+                  </q-chip>
                 </template>
 
                 <template v-else-if="col.name === 'StatusDescription'">
-                  <q-btn
+                  <!-- Status = 1 -->
+                  <q-chip
                     v-if="props.row.Status === 1"
                     outline
                     dense
-                    size="md"
-                    no-caps
-                    no-wrap
-                    color="primary"
+                    clickable
+                    :color="'primary'"
+                    text-color="primary"
                     icon="stop"
-                    :label="$t('openjobs.endjob1')"
-                    class="rounded-btn"
+                    class="text-bold q-px-sm q-py-xs"
                     @click="showendjobDialogFn(props.row)"
-                  />
+                  >
+                    {{ $t("openjobs.endjob1") }}
+                  </q-chip>
 
-                  <q-btn
+                  <!-- Otros Status -->
+                  <q-chip
                     v-else
                     outline
                     dense
-                    size="md"
-                    no-caps
-                    no-wrap
+                    clickable
                     :color="
+                      props.row.Status === 2 || col.value === 'CERRADO'
+                        ? 'negative'
+                        : props.row.Status === 4
+                        ? 'amber-8'
+                        : 'primary'
+                    "
+                    :text-color="
                       props.row.Status === 2 || col.value === 'CERRADO'
                         ? 'negative'
                         : props.row.Status === 4
@@ -284,17 +341,18 @@
                         ? 'play_arrow'
                         : 'stop'
                     "
-                    :label="
-                      props.row.Status === 2 || col.value === 'CERRADO'
-                        ? $t('openjobs.close')
-                        : props.row.Status === 4
-                        ? $t('openjobs.rewj')
-                        : col.value
-                    "
-                    class="rounded-btn"
+                    class="text-bold q-px-sm q-py-xs"
                     :disable="props.row.Status === 2 || col.value === 'CERRADO'"
                     @click="showpauseDialogFn(props.row)"
-                  />
+                  >
+                    {{
+                      props.row.Status === 2 || col.value === "CERRADO"
+                        ? $t("openjobs.close")
+                        : props.row.Status === 4
+                        ? $t("openjobs.rewj")
+                        : col.value
+                    }}
+                  </q-chip>
                 </template>
 
                 <template v-else-if="col.name === 'StartTime'">
@@ -602,6 +660,43 @@ const showpauseDialogFn = (row) => {
   showpauseDialog.value = true;
 };
 
+const getShiftConfig = (shift) => {
+  if (["N1", "N4"].includes(shift)) {
+    return { color: "light-blue-7", icon: "light_mode" };
+  }
+  if (["N2", "N3"].includes(shift)) {
+    return { color: "indigo-10", icon: "dark_mode" };
+  }
+  return { color: "blue-grey-5", icon: "schedule" };
+};
+
+const getStationConfig = (station) => {
+  if (!station) {
+    return { color: "grey-5", icon: "help" };
+  }
+
+  const prefix = station.replace(/[0-9]/g, ""); // elimina números
+
+  const map = {
+    CUT: { color: "teal-6", icon: "content_cut" },
+    PRP: { color: "cyan-7", icon: "build" },
+    RBM: { color: "indigo-6", icon: "view_stream" },
+    FBR: { color: "blue-7", icon: "cable" },
+    LAS: { color: "red-6", icon: "flash_on" },
+    POS: { color: "pink-6", icon: "auto_fix_high" },
+    VSI: { color: "purple-5", icon: "visibility" },
+    HDW: { color: "deep-orange-6", icon: "precision_manufacturing" },
+    POL: { color: "amber-7", icon: "swap_horiz" },
+    CRI: { color: "brown-6", icon: "construction" },
+    OPT: { color: "light-blue-7", icon: "biotech" },
+    PAK: { color: "green-6", icon: "inventory_2" },
+    AUD: { color: "lime-7", icon: "fact_check" },
+    INS: { color: "deep-purple-6", icon: "search" },
+    TRM: { color: "blue-grey-7", icon: "power" },
+  };
+
+  return map[prefix] || { color: "grey-6", icon: "settings" };
+};
 // Abrir modal
 const showendjobDialogFn = (row) => {
   console.log("🛑 End job clicked:", row);
