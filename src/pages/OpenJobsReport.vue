@@ -604,6 +604,54 @@
             </q-card-actions>
           </q-card>
         </q-dialog>
+
+        <q-dialog v-model="showUpdateDialog" persistent>
+          <q-card style="min-width: 400px; border-radius: 12px">
+            <q-card-section
+              class="row items-center bg-primary text-white q-py-xs"
+            >
+              <img
+                src="/img/AFL_Logo.svg"
+                style="width: 1.8em; height: 1.8em; margin-right: 0.5em"
+                class="q-mr-sm"
+              />
+              <q-icon name="refresh" size="2em" class="q-mr-xs" />
+              <div class="text-h6 text-weight-medium">
+                {{ $t("openjobs.updatedata") }}
+              </div>
+            </q-card-section>
+
+            <q-card-section class="q-pt-md q-pb-md">
+              <div class="row items-center no-wrap q-gutter-sm">
+                <q-icon name="info" color="primary" size="2.5em" />
+                <div class="col">
+                  <span class="text-body1 text-blue-grey-8">
+                    {{ $t("openjobs.alertdata") }}
+                  </span>
+                </div>
+              </div>
+            </q-card-section>
+
+            <q-card-actions align="right" class="q-pa-md bg-grey-1">
+              <q-btn
+                flat
+                :label="$t('openjobs.cancel')"
+                class="rounded-btn q-px-md"
+                color="blue-grey-6"
+                v-close-popup
+              />
+              <q-btn
+                unelevated
+                icon="update"
+                :label="$t('configuration.update')"
+                color="primary"
+                text-color="white"
+                class="rounded-btn q-px-md"
+                @click="executeDataUpdate"
+              />
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
       </q-page>
     </q-page-container>
   </q-layout>
@@ -611,7 +659,7 @@
 
 <script setup>
 import { Notify, useQuasar } from "quasar";
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, h } from "vue";
 import { useReportStore } from "src/stores/ReportStore";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -931,25 +979,18 @@ const lastUpdateDisplay = computed(() => {
 });
 
 // ⚠️ Alerta de confirmación antes de actualizar
+// Estado para controlar el modal
+const showUpdateDialog = ref(false);
+
+// Esta es la función que llama tu botón "Actualizar"
 const confirmUpdate = () => {
-  $q.dialog({
-    title: t("openjobs.updatedata"),
-    message: t("openjobs.alertdata"),
-    cancel: {
-      label: t("openjobs.cancel"),
-      color: "blue-grey-6",
-      flat: true,
-    },
-    ok: {
-      label: t("configuration.update"),
-      color: "primary",
-      unelevated: true,
-    },
-    persistent: true,
-  }).onOk(() => {
-    // Si el usuario confirma, entonces disparamos la carga
-    loadData();
-  });
+  showUpdateDialog.value = true;
+};
+
+// Función que se ejecuta al dar clic en "Actualizar" dentro del modal
+const executeDataUpdate = () => {
+  showUpdateDialog.value = false; // Cerramos el modal
+  loadData(); // Ejecutamos tu carga de datos
 };
 
 const loadData = async () => {
