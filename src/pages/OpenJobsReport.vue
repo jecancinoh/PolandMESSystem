@@ -9,41 +9,48 @@
       class="bg-blue-grey-1 column"
       behavior="desktop"
     >
-      <q-list class="q-pt-xl">
+      <div class="column items-center q-pb-md" style="padding-top: 60px">
+        <img
+          src="/img/AFL.png"
+          style="width: 45px; height: 45px"
+          class="q-mb-sm shadow-1 rounded-borders"
+        />
         <div
-          class="text-subtitle1 text-weight-bold text-primary flex items-center justify-center q-mb-md q-mt-lg"
+          class="text-h6 text-weight-bolder text-primary text-uppercase tracking-widest"
         >
+          {{ $t("app.title") }}
+        </div>
+        <span class="text-subtitle1 text-primary text-bold">
           <q-icon
             name="filter_alt"
             color="primary"
             size="28px"
-            class="q-mr-sm"
+            class="q-mr-xs"
           />
-          <span class="text-h6 text-primary q-mt-xs">{{
-            $t("configuration.drawerTitle")
-          }}</span>
-        </div>
-      </q-list>
+          {{ $t("configuration.drawerTitle") }}
+        </span>
+      </div>
 
-      <q-separator spaced />
+      <q-separator inset spaced />
 
-      <q-item clickable>
+      <div class="q-px-md q-py-sm">
         <q-btn
+          unelevated
           :label="$t('Reporte.update')"
           color="primary"
           icon="refresh"
-          class="rounded-btn full-width"
+          class="rounded-btn full-width shadow-1"
           @click="confirmUpdate"
           :loading="isLoading"
           :disable="isLoading"
         />
-      </q-item>
+      </div>
 
-      <q-separator spaced />
+      <q-separator inset spaced />
 
-      <div class="q-pa-sm q-gutter-y-sm">
+      <div class="q-pa-md q-gutter-y-sm">
         <div
-          class="text-caption text-weight-bold text-secondary text-center q-mb-sm"
+          class="text-caption text-weight-bold text-primary text-center text-uppercase q-ml-xs"
         >
           {{ $t("openjobs.fill") }}
         </div>
@@ -53,19 +60,22 @@
           bordered
           v-ripple
           @click="activeFilter = 'TODOS'"
-          :class="[
+          class="status-card cursor-pointer"
+          :class="
+            activeFilter === 'TODOS' ? 'bg-blue-grey-2 shadow-2' : 'bg-white'
+          "
+          :style="
             activeFilter === 'TODOS'
-              ? 'bg-primary text-white shadow-4'
-              : 'bg-white text-primary',
-            'cursor-pointer clickable-card',
-          ]"
+              ? 'border-left: 6px solid var(--q-primary) !important'
+              : 'border-left: 6px solid #e0e0e0'
+          "
         >
           <q-card-section class="q-pa-sm flex items-center justify-between">
-            <div class="text-subtitle2 text-bold">
+            <div class="text-subtitle2 text-bold text-primary">
               <q-icon name="list" size="20px" class="q-mr-xs" />
               {{ $t("openjobs.all") }}
             </div>
-            <div class="text-h6 text-bold">{{ countTotal }}</div>
+            <div class="text-h6 text-bold text-primary">{{ countTotal }}</div>
           </q-card-section>
         </q-card>
 
@@ -74,21 +84,27 @@
           bordered
           v-ripple
           @click="countEnProceso > 0 ? (activeFilter = 'EN PROCESO') : null"
+          class="status-card"
           :class="[
-            activeFilter === 'EN PROCESO'
-              ? 'bg-positive text-white shadow-4'
-              : 'bg-white text-positive',
+            activeFilter === 'EN PROCESO' ? 'bg-green-1 shadow-2' : 'bg-white',
             countEnProceso > 0
-              ? 'cursor-pointer clickable-card'
+              ? 'cursor-pointer'
               : 'opacity-50 cursor-not-allowed',
           ]"
+          :style="
+            activeFilter === 'EN PROCESO'
+              ? 'border-left: 6px solid var(--q-positive) !important'
+              : 'border-left: 6px solid #e0e0e0'
+          "
         >
           <q-card-section class="q-pa-sm flex items-center justify-between">
-            <div class="text-subtitle2 text-bold">
+            <div class="text-subtitle2 text-bold text-positive">
               <q-icon name="play_circle" size="20px" class="q-mr-xs" />
               {{ $t("openjobs.inprog") }}
             </div>
-            <div class="text-h6 text-bold">{{ countEnProceso }}</div>
+            <div class="text-h6 text-bold text-positive">
+              {{ countEnProceso }}
+            </div>
           </q-card-section>
         </q-card>
 
@@ -99,21 +115,29 @@
           @click="
             countProcesoLargo > 0 ? (activeFilter = 'PROCESO LARGO') : null
           "
+          class="status-card"
           :class="[
             activeFilter === 'PROCESO LARGO'
-              ? 'bg-negative text-white shadow-4'
-              : 'bg-white text-negative',
+              ? 'bg-red-1 shadow-3 pulse-alert'
+              : 'bg-white',
             countProcesoLargo > 0
-              ? 'cursor-pointer clickable-card'
+              ? 'cursor-pointer'
               : 'opacity-50 cursor-not-allowed',
           ]"
+          :style="
+            activeFilter === 'PROCESO LARGO'
+              ? 'border-left: 6px solid var(--q-negative) !important'
+              : 'border-left: 6px solid #e0e0e0'
+          "
         >
           <q-card-section class="q-pa-sm flex items-center justify-between">
-            <div class="text-subtitle2 text-bold">
-              <q-icon name="timer" size="20px" class="q-mr-xs" />
+            <div class="text-subtitle2 text-bold text-negative">
+              <q-icon name="report_problem" size="20px" class="q-mr-xs" />
               {{ $t("openjobs.longpro") }}
             </div>
-            <div class="text-h6 text-bold">{{ countProcesoLargo }}</div>
+            <div class="text-h6 text-bold text-negative">
+              {{ countProcesoLargo }}
+            </div>
           </q-card-section>
         </q-card>
 
@@ -122,61 +146,53 @@
           bordered
           v-ripple
           @click="countPausado > 0 ? (activeFilter = 'PAUSADO') : null"
+          class="status-card"
           :class="[
-            activeFilter === 'PAUSADO'
-              ? 'bg-amber-8 text-white shadow-4'
-              : 'bg-white text-amber-8',
+            activeFilter === 'PAUSADO' ? 'bg-orange-1 shadow-2' : 'bg-white',
             countPausado > 0
-              ? 'cursor-pointer clickable-card'
+              ? 'cursor-pointer'
               : 'opacity-50 cursor-not-allowed',
           ]"
+          :style="
+            activeFilter === 'PAUSADO'
+              ? 'border-left: 6px solid #e65100 !important' /* orange-10 */
+              : 'border-left: 6px solid #e0e0e0'
+          "
         >
           <q-card-section class="q-pa-sm flex items-center justify-between">
-            <div class="text-subtitle2 text-bold">
+            <div class="text-subtitle2 text-bold text-amber-9">
               <q-icon name="pause_circle" size="20px" class="q-mr-xs" />
               {{ $t("openjobs.pause") }}
             </div>
-            <div class="text-h6 text-bold">{{ countPausado }}</div>
+            <div class="text-h6 text-bold text-amber-9">{{ countPausado }}</div>
           </q-card-section>
         </q-card>
       </div>
 
       <q-space />
-      <q-separator spaced />
 
-      <div class="q-pa-sm flex justify-center">
-        <div
-          class="text-center q-pa-sm bg-grey-2 rounded-borders border-primary shadow-up-1"
-          style="min-width: 200px"
-        >
-          <div
-            class="text-overline text-primary q-mb-xs"
-            style="line-height: 1"
-          >
-            <q-icon name="schedule" size="xs" class="q-mr-xs" />
-            {{ zonaHorariaLabel }}
-          </div>
-
-          <div class="text-h5 text-bold text-primary">
-            {{ horaFormateada }}
-          </div>
-
-          <div class="text-caption text-grey-8 text-capitalize">
-            {{ fechaFormateada }}
-          </div>
+      <div class="q-pa-md column items-center">
+        <div class="text-h4 text-weight-light text-primary">
+          {{ horaFormateada }}
         </div>
+        <div class="text-caption text-grey-7 text-uppercase text-capitalize">
+          <q-icon name="event" class="q-mr-xs" />
+          {{ fechaFormateada }}
+        </div>
+        <q-badge outline color="primary" class="q-mt-sm">
+          <q-icon name="schedule" size="xs" class="q-mr-xs" />
+          {{ zonaHorariaLabel }}
+        </q-badge>
       </div>
 
       <q-separator spaced />
 
-      <q-card-actions align="left">
-        <div
-          class="row justify-center items-center q-mt-xs full-width"
-          style="min-height: 50px"
-        >
-          <LanguageToggle />
-        </div>
-      </q-card-actions>
+      <div
+        class="q-pa-sm row justify-center items-center"
+        style="min-height: 60px"
+      >
+        <LanguageToggle />
+      </div>
     </q-drawer>
 
     <q-page-container>
@@ -187,26 +203,37 @@
             <div class="loading-text">{{ $t("Downtimes.upload") }}</div>
           </div>
         </transition>
-        <div class="row items-center q-mb-md">
-          <q-avatar square size="70px">
-            <img
-              src="/img/AFL.png"
-              style="width: 2em; height: 2em; margin-right: 0.5em"
-            />
-          </q-avatar>
-          <div class="text-h5 text-primary text-bold">
-            {{ $t("openjobs.title") }}
+        <div class="row items-center justify-between q-mb-md header-container">
+          <!-- IZQUIERDA: Logo + título -->
+          <div class="row items-center q-gutter-md">
+            <q-avatar square size="50px">
+              <img src="/img/AFL.png" />
+            </q-avatar>
 
-            <div class="text-subtitle2 text-secondary">
+            <div>
+              <!-- TÍTULO -->
+              <div class="text-h5 text-weight-bold text-primary">
+                {{ $t("openjobs.title") }}
+              </div>
+
+              <!-- SUBTÍTULO -->
+              <div class="text-subtitle2 text-grey-7">
+                {{ $t("openjobs.subtitle") }}
+              </div>
+            </div>
+          </div>
+
+          <!-- DERECHA: info dinámica -->
+          <div class="column items-end">
+            <!-- Última actualización -->
+            <div class="text-caption text-bold text-green-6">
               {{ $t("hrxhr.update") }} {{ lastUpdateDisplay }}
             </div>
 
-            <div class="text-subtitle2 text-negative">
-              {{ $t("openjobs.subtitle") }}
-            </div>
+            <!-- Filtro activo -->
             <q-badge
-              color="primary"
-              class="q-ml-sm"
+              :color="getAlertColor(activeFilter)"
+              class="q-mt-xs text-white text-weight-bold"
               v-if="activeFilter !== 'TODOS'"
             >
               {{ $t("openjobs.fill2") }} {{ activeFilterLabel }}
@@ -237,7 +264,13 @@
           </template>
 
           <template v-slot:body="props">
-            <q-tr :props="props" class="custom-trackingrow">
+            <q-tr
+              :props="props"
+              class="custom-trackingrow"
+              :class="{
+                'is-closed text-grey-6': props.row.AlertType === 'CERRADO',
+              }"
+            >
               <q-td v-for="col in props.cols" :key="col.name" :props="props">
                 <template v-if="col.name === 'AlertType'">
                   <q-chip
@@ -296,6 +329,37 @@
                     />
                     {{ col.value }}
                   </q-chip>
+                </template>
+
+                <template v-else-if="col.name === 'TimeOpenFormatted'">
+                  <span
+                    v-if="props.row.AlertType === 'CERRADO'"
+                    class="text-bold text-negative"
+                  >
+                    <q-icon name="stop_circle" class="q-mr-xs" />
+                    {{ getAlertTranslation("CERRADO") }}
+                  </span>
+
+                  <span
+                    v-else-if="props.row.AlertType === 'PAUSADO'"
+                    class="text-bold text-amber-10"
+                  >
+                    <q-icon name="timer" class="q-mr-xs" />
+                    {{ getLiveTime(col.value) }}
+                  </span>
+
+                  <span
+                    v-else-if="props.row.AlertType === 'EN PROCESO'"
+                    class="text-bold text-green-7"
+                  >
+                    <q-icon name="timer" class="q-mr-xs" />
+                    {{ getLiveTime(col.value) }}
+                  </span>
+
+                  <span v-else class="text-bold text-primary">
+                    <q-icon name="timer" class="q-mr-xs" />
+                    {{ getLiveTime(col.value) }}
+                  </span>
                 </template>
 
                 <template v-else-if="col.name === 'StatusDescription'">
@@ -357,12 +421,15 @@
 
                 <template v-else-if="col.name === 'StartTime'">
                   <span
-                    :class="{
-                      'text-negative text-bold': !dayjs
-                        .utc(props.row.StartTime)
-                        .local()
-                        .isSame(dayjs(), 'day'),
-                    }"
+                    :class="[
+                      'text-bold',
+                      {
+                        'text-negative': !dayjs
+                          .utc(props.row.StartTime)
+                          .local()
+                          .isSame(dayjs(), 'day'),
+                      },
+                    ]"
                   >
                     {{
                       formatSmartDate(
@@ -673,10 +740,9 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const { t, locale } = useI18n();
-
 const $q = useQuasar();
-
 const reportStore = useReportStore();
+
 const drawer = ref(true);
 const loading = ref(false);
 const isLoading = ref(false);
@@ -686,7 +752,9 @@ const localJobsList = ref([]);
 // Variable que guarda el filtro actual
 const activeFilter = ref("TODOS");
 
+// 🔥 Variables de tiempo (Unificadas)
 const lastUpdate = ref(null);
+const currentTime = ref(Date.now()); // Para el tiempo en vivo de la tabla
 
 // 🧠 estado del dialog
 const showpauseDialog = ref(false);
@@ -698,7 +766,7 @@ const connectorsA = ref(0);
 const connectorsB = ref(0);
 const cycleMinutes = ref(null);
 
-// 🔥 Valores originales de DB
+// Valores originales de DB
 const connectorsAFromDB = ref(null);
 const connectorsBFromDB = ref(null);
 
@@ -722,9 +790,7 @@ const getStationConfig = (station) => {
   if (!station) {
     return { color: "grey-5", icon: "help" };
   }
-
   const prefix = station.replace(/[0-9]/g, ""); // elimina números
-
   const map = {
     CUT: { color: "teal-6", icon: "content_cut" },
     PRP: { color: "cyan-7", icon: "build" },
@@ -742,61 +808,47 @@ const getStationConfig = (station) => {
     INS: { color: "deep-purple-6", icon: "search" },
     TRM: { color: "blue-grey-7", icon: "power" },
   };
-
   return map[prefix] || { color: "grey-6", icon: "settings" };
 };
+
 // Abrir modal
 const showendjobDialogFn = (row) => {
   console.log("🛑 End job clicked:", row);
-
   selectedRow.value = row;
   showEndJobDialog.value = true;
 
-  // Guardar valores originales
   connectorsAFromDB.value = row.ConnectorsA;
   connectorsBFromDB.value = row.ConnectorsB;
-
-  // Si vienen de DB, usarlos; si no, dejar en 0 para captura
   connectorsA.value = row.ConnectorsA ?? 0;
   connectorsB.value = row.ConnectorsB ?? 0;
-
-  // Siempre manual
   cycleMinutes.value = null;
 };
 
 // ✅ confirmar acción
 const confirmpause = async () => {
   if (!selectedRow.value) return;
-
   const success = await reportStore.pauseProduction(selectedRow.value.Id);
 
   if (success) {
     showpauseDialog.value = false;
-
     const index = localJobsList.value.findIndex(
       (job) => job.Id === selectedRow.value.Id
     );
 
     if (index !== -1) {
       if (localJobsList.value[index].Status === 4) {
-        // Estaba pausado, lo pasamos a proceso
         localJobsList.value[index].Status = 1;
         localJobsList.value[index].AlertType = "EN PROCESO";
         localJobsList.value[index].StatusDescription = "EN PROCESO";
-        // 🟢 Verde al reanudar
         localJobsList.value[index]._chipColor = "positive";
       } else {
-        // Estaba en proceso, lo pasamos a pausado
         localJobsList.value[index].Status = 4;
         localJobsList.value[index].AlertType = "PAUSADO";
         localJobsList.value[index].StatusDescription = "PAUSADO";
-        // 🟠 Naranja al pausar
         localJobsList.value[index]._chipColor = "amber-8";
       }
 
-      // 🔥 INDICADORES DE MODIFICACIÓN
       localJobsList.value[index]._isModifiedLocally = true;
-
       localStorage.setItem("openJobsData", JSON.stringify(localJobsList.value));
     }
   }
@@ -838,8 +890,13 @@ const validateAndCompleteJob = async () => {
   );
 
   if (success) {
-    showEndJobDialog.value = false;
+    // 🔥 AGREGADO: Capturamos los valores ingresados antes de que tu código los limpie a 0
+    const capturedConnA =
+      connectorsAFromDB.value === null ? Number(connectorsA.value) : null;
+    const capturedConnB =
+      connectorsBFromDB.value === null ? Number(connectorsB.value) : null;
 
+    showEndJobDialog.value = false;
     connectorsA.value = 0;
     connectorsB.value = 0;
     cycleMinutes.value = null;
@@ -851,16 +908,17 @@ const validateAndCompleteJob = async () => {
     );
 
     if (index !== -1) {
-      // Cambiamos el estatus a Cerrado
       localJobsList.value[index].Status = 2;
       localJobsList.value[index].AlertType = "CERRADO";
       localJobsList.value[index].StatusDescription = "CERRADO";
-
-      // 🔴 Rojo al terminar el trabajo
       localJobsList.value[index]._chipColor = "negative";
-
-      // 🔥 INDICADORES DE MODIFICACIÓN
       localJobsList.value[index]._isModifiedLocally = true;
+
+      // 🔥 AGREGADO: Actualizamos los conectores en la lista local con los valores capturados
+      if (capturedConnA !== null)
+        localJobsList.value[index].ConnectorsA = capturedConnA;
+      if (capturedConnB !== null)
+        localJobsList.value[index].ConnectorsB = capturedConnB;
 
       localStorage.setItem("openJobsData", JSON.stringify(localJobsList.value));
     }
@@ -873,6 +931,33 @@ const pagination = ref({
   page: 1,
   rowsPerPage: 10,
 });
+
+// 🔥 FUNCIÓN PARA CALCULAR EL TIEMPO EN VIVO (CON SEGUNDOS)
+const getLiveTime = (minutesOpen) => {
+  if (minutesOpen == null) return "-"; // Por si viene nulo
+
+  // Tomamos el último update o el tiempo actual si por algo no existe
+  const fetchTime = lastUpdate.value || Date.now();
+
+  // Diferencia entre AHORA y cuando se descargó la data en milisegundos
+  const elapsedMs = currentTime.value - fetchTime;
+
+  // 1. En lugar de sacar minutos, sacamos los SEGUNDOS extra que han pasado
+  const extraSeconds = Math.floor(elapsedMs / 1000);
+
+  // 2. Convertimos los minutos de la DB a segundos y sumamos los extra
+  const totalSeconds = minutesOpen * 60 + extraSeconds;
+
+  // 3. Calculamos horas, minutos y segundos a partir del gran total
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+
+  // 4. Formateamos los segundos con un "0" inicial si son menores a 10 (ej. "05s")
+  const formattedSeconds = s.toString().padStart(2, "0");
+
+  return `${h}h ${m}m ${formattedSeconds}s`;
+};
 
 const columns = computed(() => [
   {
@@ -942,7 +1027,7 @@ const columns = computed(() => [
   {
     name: "TimeOpenFormatted",
     label: t("openjobs.label9"),
-    field: "TimeOpenFormatted",
+    field: "MinutesOpen",
     align: "center",
     sortable: true,
     icon: "timer",
@@ -978,38 +1063,33 @@ const lastUpdateDisplay = computed(() => {
     : "--/--/---- --:--:--";
 });
 
-// ⚠️ Alerta de confirmación antes de actualizar
-// Estado para controlar el modal
 const showUpdateDialog = ref(false);
 
-// Esta es la función que llama tu botón "Actualizar"
 const confirmUpdate = () => {
   showUpdateDialog.value = true;
 };
 
-// Función que se ejecuta al dar clic en "Actualizar" dentro del modal
 const executeDataUpdate = () => {
-  showUpdateDialog.value = false; // Cerramos el modal
-  loadData(); // Ejecutamos tu carga de datos
+  showUpdateDialog.value = false;
+  loadData();
 };
 
 const loadData = async () => {
   isLoading.value = true;
   await reportStore.fetchOpenJobs();
 
-  // Guardar en localStorage como un string JSON
   localStorage.setItem(
     "openJobsData",
     JSON.stringify(reportStore.openJobsList)
   );
-
-  // Actualizar la variable local que alimenta la tabla
   localJobsList.value = [...reportStore.openJobsList];
 
   lastUpdate.value = Date.now();
   localStorage.setItem("openJobsLastUpdate", lastUpdate.value);
 
-  isLoading.value = false; // <-- indicar fin de carga
+  isLoading.value = false;
+  pagination.value.page = 1;
+  activeFilter.value = "TODOS";
 };
 
 const initData = () => {
@@ -1017,18 +1097,15 @@ const initData = () => {
   const storedUpdate = localStorage.getItem("openJobsLastUpdate");
 
   if (storedJobs) {
-    // Si hay datos en localStorage, los usamos para que la tabla no dependa de la DB
     localJobsList.value = JSON.parse(storedJobs);
     if (storedUpdate) {
       lastUpdate.value = parseInt(storedUpdate, 10);
     }
   } else {
-    // Si es la primera vez que entra y no hay datos locales, forzamos la carga
     loadData();
   }
 };
 
-// --- CONTADORES PARA LOS BOTONES ---
 const countTotal = computed(() => localJobsList.value.length);
 const countEnProceso = computed(
   () =>
@@ -1043,7 +1120,6 @@ const countPausado = computed(
   () => localJobsList.value.filter((job) => job.AlertType === "PAUSADO").length
 );
 
-// --- FILTRADO DE LA TABLA ---
 const filteredEvents = computed(() => {
   if (activeFilter.value === "TODOS") return localJobsList.value;
   return localJobsList.value.filter(
@@ -1051,13 +1127,12 @@ const filteredEvents = computed(() => {
   );
 });
 
-// Propiedad computada que observa activeFilter e i18n
 const activeFilterLabel = computed(() => {
   switch (activeFilter.value) {
     case "PROCESO LARGO":
       return t("openjobs.longpro");
     case "RETRABAJO ABIERTO":
-      return t("openjobs.rework"); // Asegúrate de tener esta llave
+      return t("openjobs.rework");
     case "PAUSADO":
       return t("openjobs.pause");
     case "EN PROCESO":
@@ -1069,7 +1144,7 @@ const activeFilterLabel = computed(() => {
   }
 });
 
-// Asigna el color al q-badge
+// ✅ CORRECCIÓN APLICADA AQUÍ:
 const getAlertColor = (alertType) => {
   switch (alertType) {
     case "PROCESO LARGO":
@@ -1081,13 +1156,14 @@ const getAlertColor = (alertType) => {
     case "EN PROCESO":
       return "positive";
     case "CERRADO":
-      return "negative"; // Puedes usar 'grey' o 'blue-grey' si prefieres que el badge cerrado no sea rojo
+      return "negative";
+    case "TODOS":
+      return "primary"; // 👈 importante
     default:
       return "info";
   }
 };
 
-// Asigna la traducción correcta
 const getAlertTranslation = computed(() => {
   return (alertType) => {
     switch (alertType) {
@@ -1100,7 +1176,7 @@ const getAlertTranslation = computed(() => {
       case "EN PROCESO":
         return t("openjobs.inprog");
       case "CERRADO":
-        return t("openjobs.close"); // 🔥 AQUÍ AGREGAMOS LA TRADUCCIÓN
+        return t("openjobs.close");
       default:
         return alertType;
     }
@@ -1111,26 +1187,26 @@ const getAlertTranslation = computed(() => {
 const fechaFormateada = ref("");
 const horaFormateada = ref("");
 let intervaloId = null;
-const zonaHorariaLabel = ref(""); // Asegúrate de declarar este ref() arriba
+const zonaHorariaLabel = ref("");
 
 const mostrarHora = () => {
+  // 🔥 APROVECHAMOS EL RELOJ PARA ACTUALIZAR LA TABLA TAMBIÉN
+  currentTime.value = Date.now();
+
   const currentLang = localStorage.getItem("lang") || "es";
   const ahora = dayjs().tz("Europe/Warsaw").locale(currentLang);
 
-  // Traducción de la etiqueta según el selector
   if (currentLang === "es") {
     zonaHorariaLabel.value = "Hora Polonia";
   } else if (currentLang === "pl") {
-    zonaHorariaLabel.value = "Czas w Polsce"; // "Hora en Polonia" en polaco
+    zonaHorariaLabel.value = "Czas w Polsce";
   } else {
     zonaHorariaLabel.value = "Poland Time";
   }
 
-  // Formatos de fecha por idioma
   if (currentLang === "es") {
     fechaFormateada.value = ahora.format("dddd D [de] MMMM [del] YYYY");
   } else if (currentLang === "pl") {
-    // En polaco suele usarse: dddd, D MMMM YYYY
     fechaFormateada.value = ahora.format("dddd, D MMMM YYYY");
   } else {
     fechaFormateada.value = ahora.format("dddd D MMMM YYYY");
@@ -1141,7 +1217,6 @@ const mostrarHora = () => {
 
 const formatSmartDate = (start, end = null, isStartTime = false) => {
   if (!start) return "-";
-
   const startDate = dayjs.utc(start);
   const endDate = end ? dayjs.utc(end).local() : null;
   const now = dayjs();
@@ -1151,9 +1226,7 @@ const formatSmartDate = (start, end = null, isStartTime = false) => {
       ? startDate.format("hh:mm A")
       : startDate.format("DD/MM/YYYY hh:mm A");
   }
-
   if (!endDate) return "-";
-
   return endDate.isSame(now, "day")
     ? endDate.format("hh:mm A")
     : endDate.format("DD/MM/YYYY hh:mm A");
@@ -1161,7 +1234,7 @@ const formatSmartDate = (start, end = null, isStartTime = false) => {
 
 onMounted(() => {
   mostrarHora();
-  intervaloId = setInterval(mostrarHora, 1000);
+  intervaloId = setInterval(mostrarHora, 1000); // Esto hace el pulso de 1 segundo
   initData();
 });
 
@@ -1172,35 +1245,42 @@ onUnmounted(() => {
 
 <style scoped>
 /* Estilo base del header */
+/* ============================= */
+/* 🎨 HEADER */
+/* ============================= */
+
 :deep(.custom-header) {
-  background-color: #003153 !important; /* El azul oscuro de tu imagen */
+  background-color: #003153 !important;
   color: white !important;
 }
 
 :deep(.custom-header th) {
   font-weight: bold;
-  font-size: 14px;
-  white-space: nowrap !important; /* Evita que el texto se rompa */
+  font-size: 13px;
+  white-space: nowrap !important;
+  text-align: center;
 }
 
-/* FORZAR LA FLECHA A LA MISMA LÍNEA */
+/* FORZAR CONTENIDO DEL HEADER EN UNA LÍNEA */
 :deep(.downtime-qtable .q-th__content) {
-  display: inline-flex !important; /* 🔥 CAMBIO IMPORTANTE */
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   flex-wrap: nowrap !important;
   width: 100%;
 }
 
+/* Mantener headers compactos */
 :deep(.downtime-qtable th) {
   white-space: nowrap !important;
 }
 
+/* Texto dentro del header */
 :deep(.downtime-qtable .q-th__content > span) {
   white-space: nowrap !important;
 }
 
-/* Ajuste de la flecha de ordenamiento */
+/* Ícono de ordenamiento */
 :deep(.downtime-qtable .q-table__sort-icon) {
   display: inline-block !important;
   vertical-align: middle;
@@ -1210,19 +1290,111 @@ onUnmounted(() => {
   font-size: 16px !important;
 }
 
-/* --- FILAS CEBRA (CAMBIO A CELESTE) --- */
-.downtime-qtable .custom-trackingrow:nth-child(even) {
-  /* Opción A: Celeste muy suave (recomendado) */
-  background-color: #e3f2fd !important;
+/* ============================= */
+/* 📏 TABLA RESPONSIVE */
+/* ============================= */
 
-  /* Opción B: Azul un poco más intenso (si prefieres que se note más) */
-  /* background-color: #e1f5fe !important; */
+/* Compactación general */
+:deep(.downtime-qtable th),
+:deep(.downtime-qtable td) {
+  padding: 7px 4px !important;
+  font-size: 13px;
+}
+
+/* Permitir corte de texto en celdas */
+:deep(.downtime-qtable td) {
+  word-break: break-word;
+}
+
+/* ============================= */
+/* 🎨 FILAS */
+/* ============================= */
+
+/* Zebra */
+.downtime-qtable .custom-trackingrow:nth-child(even) {
+  background-color: #e3f2fd !important;
+}
+
+/* Hover SOLO para filas activas */
+:deep(.downtime-qtable .custom-trackingrow:not(.is-closed):hover) {
+  background-color: #bbdefb !important;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* Filas cerradas */
+:deep(.downtime-qtable .custom-trackingrow.is-closed) {
+  background-color: #ffebee !important;
+}
+
+/* Texto apagado en cerradas */
+:deep(.downtime-qtable .custom-trackingrow.is-closed td) {
+  color: #9e9e9e !important;
+}
+
+/* Separación tipo tarjetas */
+:deep(.downtime-qtable tbody tr) {
+  border-bottom: 6px solid #f5f5f5;
+}
+
+/* ============================= */
+/* 📊 ALINEACIÓN INTELIGENTE */
+/* ============================= */
+
+/* Ajusta columnas específicas (ejemplo operador) */
+:deep(.downtime-qtable th:nth-child(7)),
+:deep(.downtime-qtable td:nth-child(7)) {
+  text-align: left !important;
+  padding-left: 10px !important;
+}
+
+/* ============================= */
+/* ⏱️ TIEMPO ABIERTO (SLA VISUAL) */
+/* ============================= */
+
+.time-normal {
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.time-warning {
+  color: #f57c00;
+  font-weight: 600;
+}
+
+.time-critical {
+  color: #d32f2f;
+  font-weight: 700;
+}
+
+/* ============================= */
+/* ✨ ANIMACIÓN DE ACTUALIZACIÓN */
+/* ============================= */
+
+@keyframes fadeUpdate {
+  from {
+    background-color: #fff9c4;
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.updated-row {
+  animation: fadeUpdate 1s ease;
 }
 .rounded-btn {
   border-radius: 10px;
   font-weight: bold;
   font-size: 12px;
   border: 2px solid white;
+}
+
+.header-container {
+  background: white;
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* --- OVERLAY DE CARGA --- */
@@ -1271,5 +1443,42 @@ onUnmounted(() => {
   font-size: 1.3rem;
   color: #1976d2;
   font-weight: bold;
+}
+
+/* Transición suave para las cards */
+.status-card {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border-radius: 8px;
+}
+
+.status-card:hover:not(.cursor-not-allowed) {
+  transform: translateX(5px);
+  filter: brightness(0.98);
+}
+
+/* Animación de Pulso para Alertas Críticas */
+.pulse-alert {
+  animation: pulse-red 2.5s infinite;
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(193, 0, 21, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(193, 0, 21, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(193, 0, 21, 0);
+  }
+}
+
+/* Fuente Mono para que el reloj no salte */
+.font-mono {
+  font-family: "Courier New", Courier, monospace;
+}
+
+.tracking-widest {
+  letter-spacing: 0.1em;
 }
 </style>
