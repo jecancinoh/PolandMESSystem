@@ -226,17 +226,29 @@
           <!-- DERECHA: info dinámica -->
           <div class="column items-end">
             <!-- Última actualización -->
-            <div class="text-caption text-bold text-green-6">
+            <div
+              class="text-caption text-bold"
+              :class="`text-${updateColorName}`"
+            >
               {{ $t("hrxhr.update") }} {{ lastUpdateDisplay }}
             </div>
 
             <!-- Filtro activo -->
             <q-badge
-              :color="getAlertColor(activeFilter)"
+              :color="
+                activeFilter !== 'TODOS'
+                  ? getAlertColor(activeFilter)
+                  : updateColorName
+              "
               class="q-mt-xs text-white text-weight-bold"
-              v-if="activeFilter !== 'TODOS'"
             >
-              {{ $t("openjobs.fill2") }} {{ activeFilterLabel }}
+              <template v-if="activeFilter !== 'TODOS'">
+                {{ $t("openjobs.fill2") }} {{ activeFilterLabel }}
+              </template>
+
+              <template v-else>
+                {{ hoursSinceUpdate }}
+              </template>
             </q-badge>
           </div>
         </div>
@@ -749,6 +761,8 @@ const isLoading = ref(false);
 
 const localJobsList = ref([]);
 
+const now = ref(new Date());
+
 // Variable que guarda el filtro actual
 const activeFilter = ref("TODOS");
 
@@ -1051,16 +1065,13 @@ const columns = computed(() => [
 ]);
 
 const lastUpdateDisplay = computed(() => {
-  return lastUpdate.value
-    ? new Date(lastUpdate.value).toLocaleString(undefined, {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      })
-    : "--/--/---- --:--:--";
+  if (!lastUpdate.value) return "--/--/---- --:--:--";
+
+  // Usamos dayjs para forzar la visualización en la zona de Polonia
+  // .tz("Europe/Warsaw") asegura que la hora mostrada sea la de allá
+  return dayjs(lastUpdate.value)
+    .tz("Europe/Warsaw")
+    .format("DD/MM/YYYY, hh:mm:ss A");
 });
 
 const showUpdateDialog = ref(false);
@@ -1157,12 +1168,47 @@ const getAlertColor = (alertType) => {
       return "positive";
     case "CERRADO":
       return "negative";
+
     case "TODOS":
-      return "primary"; // 👈 importante
+      // En lugar de "primary" fijo, usamos nuestra lógica de tiempo
+      return updateColorName.value;
+
     default:
       return "info";
   }
 };
+
+// 1. Determina el color basado en la antigüedad (usado en texto y badges)
+const updateColorName = computed(() => {
+  if (!lastUpdate.value || !now.value) return "positive";
+
+  const updatedDate = dayjs(lastUpdate.value);
+  const diffInHours = now.value.diff(updatedDate, "hour", true);
+
+  if (diffInHours >= 24) return "negative";
+  if (diffInHours >= 12) return "amber-8";
+  return "positive";
+});
+
+// 2. Calcula el texto relativo de horas transcurridas
+const hoursSinceUpdate = computed(() => {
+  if (!lastUpdate.value || !now.value) return "";
+
+  // Convertimos la última actualización a objeto dayjs
+  const updatedDate = dayjs(lastUpdate.value);
+
+  // Calculamos la diferencia en horas usando el 'now' de Polonia
+  // .diff(fecha, unidad, float)
+  const diffInHours = Math.floor(now.value.diff(updatedDate, "hour", true));
+
+  if (diffInHours < 1) {
+    return t("openjobs.label12");
+  } else {
+    return `${t("openjobs.label13")} ${diffInHours} ${
+      diffInHours === 1 ? t("openjobs.label14") : t("openjobs.label15")
+    }`;
+  }
+});
 
 const getAlertTranslation = computed(() => {
   return (alertType) => {
@@ -1213,21 +1259,24 @@ const mostrarHora = () => {
   }
 
   horaFormateada.value = ahora.format("hh:mm:ss A");
+
+  now.value = ahora;
 };
 
+// 3. Formato de fecha inteligente (usando el 'now' reactivo)
 const formatSmartDate = (start, end = null, isStartTime = false) => {
   if (!start) return "-";
   const startDate = dayjs.utc(start);
   const endDate = end ? dayjs.utc(end).local() : null;
-  const now = dayjs();
+  const currentNow = dayjs(now.value); // Usamos la referencia reactiva
 
   if (isStartTime) {
-    return startDate.isSame(now, "day")
+    return startDate.isSame(currentNow, "day")
       ? startDate.format("hh:mm A")
       : startDate.format("DD/MM/YYYY hh:mm A");
   }
   if (!endDate) return "-";
-  return endDate.isSame(now, "day")
+  return endDate.isSame(currentNow, "day")
     ? endDate.format("hh:mm A")
     : endDate.format("DD/MM/YYYY hh:mm A");
 };

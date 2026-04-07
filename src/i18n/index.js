@@ -51,6 +51,10 @@ export const messages = {
       label9: "Tiempo Abierto",
       label10: "Alerta",
       label11: "Acciones",
+      label12: "Actualizado hace menos de 1 hora",
+      label13: "Actualizado hace",
+      label14: "hora",
+      label15: "horas",
     },
     Downtimes: {
       date1: "Fecha Inicio",
@@ -329,7 +333,7 @@ export const messages = {
       complete: "Completar",
       markRework: "Marcar como retrabajo",
       manageReworks: "Gestionar retrabajos",
-      markpause: "",
+      markpause: "Pausar trabajo",
       details: "Ver Detalles",
     },
     dialog: {
@@ -840,6 +844,10 @@ export const messages = {
       label9: "Open Time",
       label10: "Alert",
       label11: "Actions",
+      label12: "Updated less than 1 hour ago",
+      label13: "Updated ago",
+      label14: "hour",
+      label15: "hours",
     },
     Downtimes: {
       date1: "Start Date",
@@ -1118,7 +1126,7 @@ export const messages = {
       complete: "Complete",
       markRework: "Mark as rework",
       manageReworks: "Manage reworks",
-      markpause: "",
+      markpause: "Pause work",
       details: "View Details",
     },
     dialog: {
@@ -1638,6 +1646,10 @@ export const messages = {
       label9: "Czas otwarcia",
       label10: "Alert",
       label11: "Akcje",
+      label12: "Zaktualizowano mniej niż godzinę temu",
+      label13: "Zaktualizowano temu",
+      label14: "godzina",
+      label15: "godziny",
     },
     Downtimes: {
       date1: "Data rozpoczęcia",
@@ -1918,7 +1930,7 @@ export const messages = {
       complete: "Ukończ",
       markRework: "Oznacz jako przeróbkę",
       manageReworks: "Zarządzaj przeróbkami",
-      markpause: "",
+      markpause: "Wstrzymaj pracę",
       details: "Zobacz szczegóły",
     },
     dialog: {
