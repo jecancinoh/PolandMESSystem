@@ -284,7 +284,43 @@
               }"
             >
               <q-td v-for="col in props.cols" :key="col.name" :props="props">
-                <template v-if="col.name === 'AlertType'">
+                <template v-if="col.name === 'JobNumber'">
+                  <div class="row items-center no-wrap justify-center">
+                    <q-chip
+                      v-if="props.row._isModifiedLocally"
+                      :color="props.row._chipColor || 'primary'"
+                      text-color="white"
+                      dense
+                      clickable
+                      icon="edit"
+                      class="text-bold cursor-pointer"
+                      style="padding: 2px 8px; font-size: 13px"
+                      @click="handleDrillDown(col.value)"
+                    >
+                      {{ col.value }}
+                      <q-tooltip
+                        >{{ $t("Capture.ver") }} {{ col.value }}</q-tooltip
+                      >
+                    </q-chip>
+
+                    <span
+                      v-else
+                      class="text-bold text-primary cursor-pointer drill-down-link"
+                      style="
+                        text-decoration: underline;
+                        text-underline-offset: 3px;
+                      "
+                      @click="handleDrillDown(col.value)"
+                    >
+                      {{ col.value }}
+                      <q-tooltip
+                        >{{ $t("Capture.ver") }} {{ col.value }}</q-tooltip
+                      >
+                    </span>
+                  </div>
+                </template>
+
+                <template v-else-if="col.name === 'AlertType'">
                   <q-chip
                     :color="getAlertColor(col.value)"
                     text-color="white"
@@ -351,82 +387,54 @@
                     <q-icon name="stop_circle" class="q-mr-xs" />
                     {{ getAlertTranslation("CERRADO") }}
                   </span>
-
                   <span
-                    v-else-if="props.row.AlertType === 'PAUSADO'"
-                    class="text-bold text-amber-10"
+                    v-else
+                    :class="[
+                      'text-bold',
+                      {
+                        'text-amber-10': props.row.AlertType === 'PAUSADO',
+                        'text-green-7': props.row.AlertType === 'EN PROCESO',
+                        'text-red-9': props.row.AlertType === 'PROCESO LARGO',
+                      },
+                    ]"
                   >
-                    <q-icon name="timer" class="q-mr-xs" />
-                    {{ getLiveTime(col.value) }}
-                  </span>
-
-                  <span
-                    v-else-if="props.row.AlertType === 'EN PROCESO'"
-                    class="text-bold text-green-7"
-                  >
-                    <q-icon name="timer" class="q-mr-xs" />
-                    {{ getLiveTime(col.value) }}
-                  </span>
-
-                  <span v-else class="text-bold text-primary">
                     <q-icon name="timer" class="q-mr-xs" />
                     {{ getLiveTime(col.value) }}
                   </span>
                 </template>
 
                 <template v-else-if="col.name === 'StatusDescription'">
-                  <!-- Status = 1 -->
                   <q-chip
-                    v-if="props.row.Status === 1"
-                    outline
-                    dense
-                    clickable
-                    :color="'primary'"
-                    text-color="primary"
-                    icon="stop"
-                    class="text-bold q-px-sm q-py-xs"
-                    @click="showendjobDialogFn(props.row)"
-                  >
-                    {{ $t("openjobs.endjob1") }}
-                  </q-chip>
-
-                  <!-- Otros Status -->
-                  <q-chip
-                    v-else
                     outline
                     dense
                     clickable
                     :color="
-                      props.row.Status === 2 || col.value === 'CERRADO'
+                      props.row.Status === 1
+                        ? 'primary'
+                        : props.row.Status === 2
                         ? 'negative'
-                        : props.row.Status === 4
-                        ? 'amber-8'
-                        : 'primary'
-                    "
-                    :text-color="
-                      props.row.Status === 2 || col.value === 'CERRADO'
-                        ? 'negative'
-                        : props.row.Status === 4
-                        ? 'amber-8'
-                        : 'primary'
+                        : 'amber-8'
                     "
                     :icon="
-                      props.row.Status === 2 || col.value === 'CERRADO'
+                      props.row.Status === 1
+                        ? 'stop'
+                        : props.row.Status === 2
                         ? 'done'
-                        : props.row.Status === 4
-                        ? 'play_arrow'
-                        : 'stop'
+                        : 'play_arrow'
                     "
                     class="text-bold q-px-sm q-py-xs"
-                    :disable="props.row.Status === 2 || col.value === 'CERRADO'"
-                    @click="showpauseDialogFn(props.row)"
+                    @click="
+                      props.row.Status === 1
+                        ? showendjobDialogFn(props.row)
+                        : showpauseDialogFn(props.row)
+                    "
                   >
                     {{
-                      props.row.Status === 2 || col.value === "CERRADO"
+                      props.row.Status === 1
+                        ? $t("openjobs.endjob1")
+                        : props.row.Status === 2
                         ? $t("openjobs.close")
-                        : props.row.Status === 4
-                        ? $t("openjobs.rewj")
-                        : col.value
+                        : $t("openjobs.rewj")
                     }}
                   </q-chip>
                 </template>
@@ -451,26 +459,6 @@
                       )
                     }}
                   </span>
-                </template>
-
-                <template v-else-if="col.name === 'JobNumber'">
-                  <div class="row items-center no-wrap justify-center">
-                    <q-chip
-                      v-if="props.row._isModifiedLocally"
-                      :color="props.row._chipColor || 'primary'"
-                      text-color="white"
-                      dense
-                      icon="edit"
-                      class="text-bold"
-                      style="padding: 2px 8px; font-size: 13px"
-                    >
-                      {{ col.value }}
-                    </q-chip>
-
-                    <span v-else class="text-bold text-blue-grey-10">
-                      {{ col.value }}
-                    </span>
-                  </div>
                 </template>
 
                 <template v-else>
@@ -731,6 +719,133 @@
             </q-card-actions>
           </q-card>
         </q-dialog>
+
+        <q-dialog v-model="showSearchDialog" backdrop-filter="blur(4px)">
+          <q-card
+            style="
+              width: 1200px;
+              max-width: 95vw;
+              border-radius: 12px;
+              overflow: hidden;
+            "
+          >
+            <q-card-section
+              class="row items-center bg-primary text-white q-py-xs"
+            >
+              <img
+                src="/img/AFL_Logo.svg"
+                style="width: 1.8em; height: 1.8em; margin-right: 0.5em"
+                class="q-mr-sm"
+              />
+              <q-icon name="analytics" size="2em" class="q-mr-xs" />
+              <div class="text-h6 text-weight-medium">
+                {{ $t("Capture.traz") }}
+                {{ searchQueryCopy }}
+              </div>
+              <q-space />
+              <q-btn
+                icon="close"
+                flat
+                round
+                dense
+                v-close-popup
+                color="white"
+              />
+            </q-card-section>
+
+            <q-card-section class="q-pa-md">
+              <q-table
+                flat
+                bordered
+                dense
+                :rows="reportStore2.searchResult"
+                :columns="dynamicColumns"
+                row-key="JobNumber"
+                :loading="reportStore2.loadingSearch"
+                :pagination="{ rowsPerPage: 0 }"
+                hide-bottom
+                class="modern-table"
+              >
+                <template v-slot:body-cell="props">
+                  <q-td :props="props">
+                    <div
+                      v-if="
+                        props.value &&
+                        props.value !== 'NULL' &&
+                        String(props.value).trim() !== ''
+                      "
+                    >
+                      <div
+                        v-for="(item, index) in String(props.value).split(',')"
+                        :key="index"
+                        class="trace-item-data"
+                        :class="{
+                          'last-station-highlight': isLastActiveStation(
+                            props.row,
+                            props.col.name
+                          ),
+                        }"
+                      >
+                        <div class="row no-wrap items-center">
+                          <q-icon
+                            :name="
+                              isLastActiveStation(props.row, props.col.name)
+                                ? 'stars'
+                                : 'chevron_right'
+                            "
+                            :color="
+                              isLastActiveStation(props.row, props.col.name)
+                                ? 'blue-9'
+                                : 'green-7'
+                            "
+                            size="14px"
+                            v-if="props.col.name !== 'JobNumber'"
+                          />
+                          <span
+                            :class="
+                              isLastActiveStation(props.row, props.col.name)
+                                ? 'text-blue-10'
+                                : 'text-green-10'
+                            "
+                            class="text-caption text-weight-medium q-ml-xs"
+                          >
+                            {{ item.trim() }}
+                          </span>
+                        </div>
+                        <div
+                          v-if="isLastActiveStation(props.row, props.col.name)"
+                          class="last-station-label text-weight-bolder"
+                        >
+                          {{ $t("configuration.lastStation") }}
+                        </div>
+                      </div>
+                    </div>
+                    <div v-else class="empty-data-container">
+                      <span class="text-weight-bolder text-red-14">--</span>
+                    </div>
+                  </q-td>
+                </template>
+              </q-table>
+            </q-card-section>
+
+            <q-card-actions align="right" class="q-pa-md border-top">
+              <q-btn
+                flat
+                :label="$t('common.close')"
+                color="grey-7"
+                v-close-popup
+              />
+              <q-btn
+                unelevated
+                color="primary"
+                :label="$t('configuration.update')"
+                icon="refresh"
+                @click="handleDrillDown(searchQueryCopy)"
+                :loading="reportStore2.loadingSearch"
+              />
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
       </q-page>
     </q-page-container>
   </q-layout>
@@ -746,6 +861,7 @@ import timezone from "dayjs/plugin/timezone";
 import "dayjs/locale/es";
 import "dayjs/locale/en";
 import LanguageToggle from "src/components/LanguageToggle.vue";
+import { useJobTrackingStore } from "src/stores/useJobTrackingStore";
 import { useI18n } from "vue-i18n";
 
 dayjs.extend(utc);
@@ -754,6 +870,9 @@ dayjs.extend(timezone);
 const { t, locale } = useI18n();
 const $q = useQuasar();
 const reportStore = useReportStore();
+const reportStore2 = useJobTrackingStore();
+const showSearchDialog = ref(false);
+const searchQueryCopy = ref("");
 
 const drawer = ref(true);
 const loading = ref(false);
@@ -943,7 +1062,7 @@ const pagination = ref({
   sortBy: "StartTime",
   descending: false,
   page: 1,
-  rowsPerPage: 10,
+  rowsPerPage: 0,
 });
 
 // 🔥 FUNCIÓN PARA CALCULAR EL TIEMPO EN VIVO (CON SEGUNDOS)
@@ -1280,6 +1399,58 @@ const formatSmartDate = (start, end = null, isStartTime = false) => {
     ? endDate.format("hh:mm A")
     : endDate.format("DD/MM/YYYY hh:mm A");
 };
+
+const handleDrillDown = async (jobNumber) => {
+  if (!jobNumber) return;
+  isLoading.value = true;
+  searchQueryCopy.value = jobNumber;
+
+  try {
+    await reportStore2.fetchJobDetails(jobNumber);
+    showSearchDialog.value = true;
+  } catch (error) {
+    console.error("Error al obtener el tracking del Job:", error);
+  } finally {
+    isLoading.value = false; // Esto siempre se ejecuta, falle o no
+  }
+};
+
+// 1. Identifica cuál es la última estación con datos para poner la estrella
+const isLastActiveStation = (row, colName) => {
+  if (colName === "JobNumber") return false;
+
+  // Obtenemos todos los nombres de columnas excepto JobNumber
+  const stationColumns = dynamicColumns.value
+    .map((c) => c.name)
+    .filter((name) => name !== "JobNumber");
+
+  // Filtramos solo las que tienen contenido real
+  const activeStations = stationColumns.filter((name) => {
+    const val = row[name];
+    return val && val !== "NULL" && String(val).trim() !== "";
+  });
+
+  if (activeStations.length === 0) return false;
+
+  // Si la columna actual es la última de la lista de activas, devolvemos true
+  return activeStations[activeStations.length - 1] === colName;
+};
+
+// 2. Computed para generar las columnas del modal automáticamente
+const dynamicColumns = computed(() => {
+  if (!reportStore2.searchResult || reportStore2.searchResult.length === 0) {
+    return [];
+  }
+
+  const firstRow = reportStore2.searchResult[0];
+  return Object.keys(firstRow).map((key) => ({
+    name: key,
+    label: key === "JobNumber" ? "Job #" : key,
+    field: key,
+    align: key === "JobNumber" ? "left" : "center",
+    sortable: true,
+  }));
+});
 
 onMounted(() => {
   mostrarHora();
