@@ -1530,4 +1530,71 @@ onUnmounted(() => {
 .tracking-widest {
   letter-spacing: 0.1em;
 }
+
+.drill-down-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+
+.drill-down-link:hover {
+  color: #1976d2; /* Un azul un poco más intenso al pasar el mouse */
+}
+
+.hover-effect:hover {
+  filter: brightness(0.9);
+}
+
+/* Contenedor de cada dato de estación */
+.trace-item-data {
+  margin-bottom: 4px;
+  padding: 4px 6px;
+  background-color: #e8f5e9; /* Verde clarito */
+  border-radius: 4px;
+  border: 1px solid #c8e6c9;
+  position: relative;
+}
+
+/* Resaltado para la última estación activa */
+.last-station-highlight {
+  background-color: #e3f2fd !important; /* Azul clarito */
+  border: 1px solid #90caf9 !important;
+  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.2);
+}
+
+/* Etiqueta pequeña de "Última Estación" */
+.last-station-label {
+  font-size: 8px;
+  color: #1565c0;
+  margin-top: 2px;
+  text-align: right;
+  letter-spacing: 0.3px;
+}
+
+/* Contenedor para cuando no hay datos */
+.empty-data-container {
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
+  padding: 4px;
+  text-align: center;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modern-table :deep(thead tr th) {
+  font-weight: bold;
+  background-color: #f8f9fa;
+  color: #1976d2;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.modern-table :deep(tbody td) {
+  border-right: 1px solid #f0f0f0;
+  vertical-align: top;
+  padding: 8px 4px;
+}
 </style>
