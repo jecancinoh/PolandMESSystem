@@ -56,8 +56,6 @@
           </template>
         </q-select>
 
-        <q-separator />
-
         <q-btn
           :label="$t('configuration.loadButton')"
           color="secondary"
@@ -67,25 +65,6 @@
           :disable="!selectedYear"
         />
       </q-card-section>
-
-      <q-separator />
-      <div class="q-pa-md">
-        <q-btn-dropdown
-          split
-          to="/start/pick-quasar-flavour"
-          color="teal"
-          rounded
-          label="Select Date Range">
-          <q-list>
-            <div class="q-pa-md">
-              <div class="q-pb-sm">
-              Select Time Range
-              </div>
-            <q-date v-model="days" range multiple/>
-            </div>
-          </q-list>
-        </q-btn-dropdown>
-      </div>
 
       <q-separator />
 
@@ -155,7 +134,7 @@
                 <q-item-section side>
                   <q-item-label
                     :class="['text-bold', `text-${kpi.color}`]"
-                    :style="{ fontSize: '16px', lineHeight: '1.2' }"
+                    :style="{ fontSize: '14px', lineHeight: '1.2' }"
                   >
                     {{ kpi.value }}
                   </q-item-label>
@@ -219,7 +198,7 @@
                 <q-item-section side>
                   <q-item-label
                     :class="['text-bold', `text-${kpi.color}`]"
-                    :style="{ fontSize: '16px', lineHeight: '1.2' }"
+                    :style="{ fontSize: '14px', lineHeight: '1.2' }"
                   >
                     {{ kpi.value }}
                   </q-item-label>
@@ -2401,9 +2380,7 @@ const handleSearch = async () => {
 };
 
 const today = dayjs().format("YYYY-MM-DD");
-const days = ref([
-  { from: today, to: today },
-]);
+const days = ref([{ from: today, to: today }]);
 
 const handleExportExcel = async () => {
   // const data = await reportStore2.fetchWeeklyReport();
