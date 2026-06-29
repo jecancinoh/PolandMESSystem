@@ -635,6 +635,7 @@
                     dense
                     color="primary"
                     :rules="[(val) => val > 0 || $t('openjobs.minalert')]"
+                    @keyup.enter="validateAndCompleteJob"
                   >
                     <template v-slot:prepend>
                       <q-icon name="timer" color="primary" />

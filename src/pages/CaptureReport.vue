@@ -20,42 +20,76 @@
       <q-separator />
 
       <q-card-section class="q-pt-md q-pb-md q-px-lg column gap-sm">
-        <q-select
-          v-model="selectedYear"
-          :options="yearOptions"
-          :label="$t('configuration.selectYear')"
-          outlined
-          dense
+        <!-- YEAR -->
+
+        <q-btn
+          outline
           rounded
           color="primary"
-          class="modern-input q-mb-md"
-          hide-bottom-space
-          clearable
+          icon="event"
+          class="full-width justify-between q-mb-md"
+          :label="selectedYear || $t('configuration.selectYear')"
         >
-          <template v-slot:prepend>
-            <q-icon name="event" color="primary" />
-          </template>
-        </q-select>
+          <q-icon name="expand_more" class="q-ml-sm" />
 
-        <q-select
-          v-model="selectedMonth"
-          :options="monthOptions"
-          :label="$t('configuration.selectMonth')"
-          emit-value
-          map-options
-          outlined
-          dense
+          <q-menu>
+            <q-list style="min-width: 150px">
+              <q-item
+                v-for="year in yearOptions"
+                :key="year"
+                clickable
+                dense
+                v-close-popup
+                class="custom-menu-item"
+                :active="selectedYear === year"
+                active-class="bg-primary text-white"
+                @click="selectedYear = year"
+              >
+                <q-item-section>
+                  {{ year }}
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
+
+        <!-- MONTH -->
+        <q-btn
+          outline
           rounded
           color="primary"
-          class="modern-input"
-          hide-bottom-space
-          clearable
+          icon="calendar_today"
+          class="full-width justify-between"
+          :label="
+            selectedMonth
+              ? monthOptions.find((m) => m.value === selectedMonth)?.label
+              : $t('configuration.selectMonth')
+          "
         >
-          <template v-slot:prepend>
-            <q-icon name="calendar_today" color="primary" />
-          </template>
-        </q-select>
+          <q-icon name="expand_more" class="q-ml-sm" />
 
+          <q-menu>
+            <q-list style="min-width: 180px">
+              <q-item
+                v-for="month in monthOptions"
+                :key="month.value"
+                clickable
+                dense
+                v-close-popup
+                class="custom-menu-item"
+                :active="selectedMonth === month.value"
+                active-class="bg-primary text-white"
+                @click="selectedMonth = month.value"
+              >
+                <q-item-section>
+                  {{ month.label }}
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
+
+        <!-- LOAD -->
         <q-btn
           :label="$t('configuration.loadButton')"
           color="secondary"
@@ -234,8 +268,16 @@
 
           <!-- Fecha y reloj alineados a la derecha -->
           <div class="text-primary text-right">
-            <div class="text-bold">{{ fechaFormateada }}</div>
+            <div class="text-bold flex justify-center">
+              {{ fechaFormateada }}
+            </div>
             <div class="reloj">{{ horaFormateada }}</div>
+            <div class="flex justify-center">
+              <q-badge outline color="primary">
+                <q-icon name="schedule" size="xs" />
+                {{ zonaHorariaLabel }}
+              </q-badge>
+            </div>
           </div>
         </div>
 
@@ -1066,8 +1108,9 @@ import "dayjs/locale/en"; // Cargar inglés
 import "dayjs/locale/pl"; // Cargar polaco
 import localeData from "dayjs/plugin/localeData"; // Permite usar .locale()
 import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
-
+dayjs.extend(timezone);
 dayjs.extend(localeData);
 
 dayjs.extend(localizedFormat);
@@ -1247,24 +1290,36 @@ const monthlyShiftChips = computed(() => {
     .filter((chip) => chip !== null);
 });
 
+const zonaHorariaLabel = ref("");
+
 const mostrarHora = () => {
-  // 1. Obtener el idioma de localStorage o usar 'es' como predeterminado
   const currentLang = localStorage.getItem("lang") || "es";
 
-  // 2. Configurar el idioma (locale) para la instancia actual de Day.js
-  const ahora = dayjs().locale(currentLang);
+  // 🔥 Hora fija de Polonia
+  const ahora = dayjs().tz("Europe/Warsaw").locale(currentLang);
 
   if (currentLang === "es") {
     fechaFormateada.value = ahora.format("dddd D [de] MMMM [del] YYYY");
+  } else if (currentLang === "pl") {
+    fechaFormateada.value = ahora.format("dddd, D MMMM YYYY");
   } else {
-    fechaFormateada.value = ahora.format("dddd D MMMM YYYY"); // Ej: Monday 4 December 2025
+    fechaFormateada.value = ahora.format("dddd D MMMM YYYY");
   }
 
-  horaFormateada.value = ahora.format("hh:mm:ss A");
+  if (currentLang === "es") {
+    zonaHorariaLabel.value = "Hora Polonia";
+  } else if (currentLang === "pl") {
+    zonaHorariaLabel.value = "Czas w Polsce";
+  } else {
+    zonaHorariaLabel.value = "Poland Time";
+  }
 
-  // Si quieres 12h:
-  // horaFormateada.value = ahora.format("hh:mm:ss A");
-  // horaFormateada.value = ahora.format("HH:mm:ss"); // Forzamos 24h para consistencia global
+  // 🇵🇱 En Polonia normalmente se usa formato 24h
+  if (currentLang === "pl") {
+    horaFormateada.value = ahora.format("hh:mm:ss A");
+  } else {
+    horaFormateada.value = ahora.format("hh:mm:ss A");
+  }
 };
 let intervaloId = null;
 
@@ -2383,13 +2438,28 @@ const today = dayjs().format("YYYY-MM-DD");
 const days = ref([{ from: today, to: today }]);
 
 const handleExportExcel = async () => {
-  // const data = await reportStore2.fetchWeeklyReport();
+  // 🔥 Construimos el rango automáticamente
+  // usando selectedYear + selectedMonth
+
+  let from = null;
+  let to = null;
+
+  if (selectedYear.value && selectedMonth.value) {
+    const selectedDate = dayjs(
+      `${selectedYear.value}-${selectedMonth.value}-01`
+    );
+
+    from = selectedDate.startOf("month").format("YYYY-MM-DD");
+    to = selectedDate.endOf("month").format("YYYY-MM-DD");
+  }
+
   console.log("days.value.raw: ", days.value);
-  const { from, to } = days.value[0] || {};
-  console.log("day.value: ", day.value);
+  console.log("days.value: ", days.value);
   console.log("from: ", from);
   console.log("to: ", to);
+
   const data = await reportStore2.fetchWeeklyReport(from, to);
+
   if (!from || !to) {
     console.error("date range is missing:", { from, to });
   }
@@ -2452,10 +2522,7 @@ const handleExportExcel = async () => {
               horizontal: "center",
               vertical: "center",
             },
-            fill:
-              R % 2 === 0
-                ? { fgColor: { rgb: "F2F2F2" } } // gris alternado
-                : undefined,
+            fill: R % 2 === 0 ? { fgColor: { rgb: "F2F2F2" } } : undefined,
             border: {
               top: { style: "thin", color: { rgb: "D0D0D0" } },
               bottom: { style: "thin", color: { rgb: "D0D0D0" } },
@@ -2488,9 +2555,14 @@ const handleExportExcel = async () => {
 
       XLSX.utils.book_append_sheet(workbook, worksheet, "Weekly Report");
 
-      const fileName = `Weekly_Report_${new Date()
-        .toISOString()
-        .slice(0, 10)}.xlsx`;
+      const monthName = dayjs(
+        `${selectedYear.value}-${selectedMonth.value}-01`
+      ).format("MMMM");
+
+      const capitalizedMonth =
+        monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+      const fileName = `Weekly_Report_${capitalizedMonth}_${selectedYear.value}.xlsx`;
 
       XLSX.writeFile(workbook, fileName);
     } catch (error) {
@@ -2859,8 +2931,8 @@ const handleExportExcel = async () => {
 
 .reloj {
   width: 100%;
-  padding: 10px;
-  font-size: 1.5em;
+  padding: 3px;
+  font-size: 2em;
   background: rgba(255, 255, 255, 0.5);
   display: flex;
   justify-content: center;
@@ -3100,5 +3172,15 @@ const handleExportExcel = async () => {
 }
 .border-top {
   border-top: 1px solid #eeeeee;
+}
+
+.custom-menu-item {
+  border-radius: 8px;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-menu-item:hover {
+  background: rgba(25, 118, 210, 0.08);
+  box-shadow: inset 3px 0 0 #1976d2;
 }
 </style>

@@ -6,7 +6,7 @@ const path = require("path");
 //const { snApi } = require("./snApi.js");
 const axios = require("axios");
 const app = express();
-const port = process.env.PORT || 4000; // Puerto del servidor
+const port = process.env.PORT || 3000; // Puerto del servidor
 const net = require("net");
 
 // Configuración de la base de datos SQL Server
